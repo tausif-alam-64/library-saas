@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #111111;
+  --color-surface: #ffffff;
+  --color-border: #e5e5e5;
+  --color-muted: #6b7280;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-info: #2563eb;
+
+  /* Fee status colors */
+  --fee-paid-bg: #f0fdf4;
+  --fee-paid-text: #15803d;
+  --fee-grace-bg: #fffbeb;
+  --fee-grace-text: #b45309;
+  --fee-overdue-bg: #fef2f2;
+  --fee-overdue-text: #b91c1c;
+
+  /* Seat map colors */
+  --seat-free: #dcfce7;
+  --seat-free-border: #16a34a;
+  --seat-occupied: #fee2e2;
+  --seat-occupied-border: #dc2626;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  /* Prevent font size inflation on mobile */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f9fafb;
+  color: #111111;
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior: none;
+}
+
+/* Minimum tap target size — 44px is Apple's HIG guideline */
+/* Every interactive element must meet this minimum */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Remove default button styles */
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+}
+
+/* Prevent layout shift from scrollbar appearing/disappearing */
+html {
+  scrollbar-gutter: stable;
 }

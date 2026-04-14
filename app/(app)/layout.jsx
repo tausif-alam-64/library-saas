@@ -6,7 +6,7 @@ import { ROUTES } from '@/utils/constants'
 import { AppShell } from '@/components/layout/AppShell'
 
 export default async function AppLayout({ children }) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get the authenticated user
   // Middleware guarantees a session exists — but we verify again here

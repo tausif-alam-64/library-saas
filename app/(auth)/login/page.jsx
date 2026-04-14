@@ -17,8 +17,6 @@ export default function LoginPage() {
 
   async function handleSignIn(e) {
     e.preventDefault()
-
-    // Prevent double submission
     if (isLoading) return
 
     setError(null)
@@ -33,26 +31,25 @@ export default function LoginPage() {
       })
 
       if (signInError) {
-        // Supabase returns 'Invalid login credentials' for wrong email/password
-        // We show a cleaner message to the user
         if (
           signInError.message.includes('Invalid login credentials') ||
           signInError.message.includes('invalid_grant')
         ) {
           setError('Incorrect email or password. Please try again.')
-        } else if (signInError.message.includes('network') || signInError.message.includes('fetch')) {
-          setError('No internet connection. Please check your network and try again.')
+        } else if (
+          signInError.message.includes('network') ||
+          signInError.message.includes('fetch')
+        ) {
+          setError('No internet connection. Please check your network.')
         } else {
           setError('Unable to sign in. Please try again.')
         }
         return
       }
 
-      // Redirect to the page the user was trying to reach
-      // or to dashboard as default
       const redirectTo = searchParams.get('redirectTo') || ROUTES.DASHBOARD
+      // router.replace is enough — no need for router.refresh() here
       router.replace(redirectTo)
-      router.refresh() // Force the layout to re-fetch session data
 
     } catch (err) {
       console.error('[login] Unexpected error:', err)
@@ -63,35 +60,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1.5rem',
-      background: '#f9fafb',
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '360px',
-      }}>
+    // overflow-y-auto — page scrolls when keyboard appears on mobile
+    // This ensures the submit button is always reachable
+    <div className="min-h-screen overflow-y-auto flex flex-col
+                    items-center justify-center px-6 py-12 bg-gray-50">
+      <div className="w-full max-w-sm">
 
         {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{
-            fontSize: '1.25rem',
-            fontWeight: '600',
-            color: '#111111',
-            margin: '0 0 0.25rem 0',
-          }}>
+        <div className="mb-8">
+          <h1 className="text-xl font-semibold text-gray-900 mb-1">
             Library Manager
           </h1>
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#6b7280',
-            margin: 0,
-          }}>
+          <p className="text-sm text-gray-500">
             Sign in to your account
           </p>
         </div>
@@ -103,32 +83,27 @@ export default function LoginPage() {
           {error && (
             <div
               role="alert"
-              style={{
-                padding: '0.75rem 1rem',
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderRadius: '8px',
-                marginBottom: '1.25rem',
-                fontSize: '0.875rem',
-                color: '#b91c1c',
-                lineHeight: '1.5',
-              }}
+              className="flex items-start gap-2 p-3 mb-5
+                         bg-red-50 border border-red-200 rounded-lg"
             >
-              {error}
+              <svg
+                className="w-4 h-4 text-red-500 mt-0.5 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 8v4m0 4h.01" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              <p className="text-sm text-red-700 leading-snug">{error}</p>
             </div>
           )}
 
-          {/* Email field */}
-          <div style={{ marginBottom: '1rem' }}>
+          {/* Email */}
+          <div className="mb-4">
             <label
               htmlFor="email"
-              style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: '#374151',
-                marginBottom: '0.375rem',
-              }}
+              className="block text-sm font-medium text-gray-700 mb-1.5"
             >
               Email address
             </label>
@@ -142,55 +117,32 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
-              style={{
-                display: 'block',
-                width: '100%',
-                height: '48px',
-                padding: '0 0.875rem',
-                background: '#ffffff',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                color: '#111111',
-                outline: 'none',
-                transition: 'border-color 0.15s',
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#111111'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              className="w-full h-12 px-3.5 bg-white border border-gray-300
+                         rounded-lg text-base text-gray-900 outline-none
+                         focus:border-gray-900 focus:ring-1 focus:ring-gray-900
+                         disabled:bg-gray-50 disabled:text-gray-400
+                         transition-colors"
             />
           </div>
 
-          {/* Password field */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '0.375rem',
-            }}>
+          {/* Password */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-1.5">
               <label
                 htmlFor="password"
-                style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#374151',
-                }}
+                className="text-sm font-medium text-gray-700"
               >
                 Password
               </label>
               <button
                 type="button"
-                onClick={() => setError('Please contact your administrator to reset your password.')}
-                style={{
-                  fontSize: '0.8125rem',
-                  color: '#6b7280',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '0',
-                  minHeight: 'auto',
-                  minWidth: 'auto',
-                }}
+                onClick={() =>
+                  setError(
+                    'Please contact your administrator to reset your password.'
+                  )
+                }
+                className="text-xs text-gray-400 hover:text-gray-600
+                           transition-colors min-h-0 min-w-0"
               >
                 Forgot password?
               </button>
@@ -203,56 +155,45 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
-              style={{
-                display: 'block',
-                width: '100%',
-                height: '48px',
-                padding: '0 0.875rem',
-                background: '#ffffff',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                color: '#111111',
-                outline: 'none',
-                transition: 'border-color 0.15s',
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#111111'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              className="w-full h-12 px-3.5 bg-white border border-gray-300
+                         rounded-lg text-base text-gray-900 outline-none
+                         focus:border-gray-900 focus:ring-1 focus:ring-gray-900
+                         disabled:bg-gray-50 disabled:text-gray-400
+                         transition-colors"
             />
           </div>
 
-          {/* Submit button */}
+          {/* Submit button
+              Only disabled during loading — NOT on empty state
+              Mobile autofill does not fire onChange so React state
+              can be empty even when the input visually shows text */}
           <button
             type="submit"
-            disabled={isLoading || !email || !password}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              height: '48px',
-              background: isLoading || !email || !password ? '#9ca3af' : '#111111',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.9375rem',
-              fontWeight: '500',
-              cursor: isLoading || !email || !password ? 'not-allowed' : 'pointer',
-              transition: 'background 0.15s',
-              gap: '0.5rem',
-            }}
+            disabled={isLoading}
+            className="w-full h-12 flex items-center justify-center gap-2
+                       bg-gray-900 text-white rounded-lg
+                       text-[0.9375rem] font-medium
+                       disabled:bg-gray-400 disabled:cursor-not-allowed
+                       active:scale-[0.98] transition-all"
           >
             {isLoading ? (
               <>
                 <svg
-                  width="18"
-                  height="18"
+                  className="w-4 h-4 animate-spin"
                   viewBox="0 0 24 24"
                   fill="none"
-                  style={{ animation: 'spin 1s linear infinite' }}
                 >
-                  <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
-                  <path d="M12 2a10 10 0 0110 10" stroke="#ffffff" strokeWidth="3" strokeLinecap="round"/>
+                  <circle
+                    cx="12" cy="12" r="10"
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="3"
+                  />
+                  <path
+                    d="M12 2a10 10 0 0110 10"
+                    stroke="white"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
                 </svg>
                 Signing in...
               </>
@@ -260,16 +201,9 @@ export default function LoginPage() {
               'Sign in'
             )}
           </button>
+
         </form>
       </div>
-
-      {/* Spinner animation */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

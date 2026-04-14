@@ -2,25 +2,16 @@
 
 import { Inter } from 'next/font/google'
 import { AppProviders } from '@/providers/AppProviders'
-import '@/app/globals.css'
+import './globals.css'
 
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
 })
 
 export const metadata = {
   title: 'Library Manager',
   description: 'Seat and fee management for study libraries',
-  manifest: '/manifest.json',
-  themeColor: '#111111',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1, // Prevent zoom on input focus on iOS
-    userScalable: false,
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -28,14 +19,26 @@ export const metadata = {
   },
 }
 
+// viewport and themeColor must be in generateViewport, not metadata
+// This fixes the warnings in the terminal
+export function generateViewport() {
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    themeColor: '#111111',
+  }
+}
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.className}>
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
-      <body>
+      <body className="bg-gray-50 overscroll-none">
         <AppProviders>
           {children}
         </AppProviders>

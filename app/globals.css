@@ -1,10 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --color-primary: #111111;
-  --color-surface: #ffffff;
-  --color-border: #e5e5e5;
-  --color-muted: #6b7280;
+   /*  Semantic colors  */
   --color-success: #16a34a;
   --color-warning: #d97706;
   --color-danger: #dc2626;
@@ -25,39 +22,40 @@
   --seat-occupied-border: #dc2626;
 }
 
-* {
-  box-sizing: border-box;
-}
+/* ─── Base overrides on top of Tailwind preflight ────────────────────────── */
 
 html {
-  /* Prevent font size inflation on mobile */
   -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable;
 }
 
 body {
-  background-color: #f9fafb;
-  color: #111111;
-  /* Prevent overscroll bounce on iOS */
   overscroll-behavior: none;
 }
 
-/* Minimum tap target size — 44px is Apple's HIG guideline */
-/* Every interactive element must meet this minimum */
-button, a, [role="button"] {
+/* ─── Minimum tap target ─────────────────────────────────────────────────── */
+a,
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+label[for] {
   min-height: 44px;
   min-width: 44px;
 }
 
-/* Remove default button styles */
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  padding: 0;
-  font: inherit;
+/* ─── iOS momentum scrolling ─────────────────────────────────────────────── */
+* {
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Prevent layout shift from scrollbar appearing/disappearing */
-html {
-  scrollbar-gutter: stable;
+/* ─── Focus visible — keyboard only ─────────────────────────────────────── */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }

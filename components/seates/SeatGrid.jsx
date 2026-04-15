@@ -1,20 +1,20 @@
 // components/seats/SeatGrid.jsx
-'use client'
+"use client";
 
-import useSeatsStore from '@/stores/useSeatsStore'
-import { SeatCell } from './SeatCell'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import useSeatsStore from "@/stores/useSeatsStore";
+import { SeatCell } from "./SeatCell";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 // onSeatTap — called when any seat cell is tapped
 //             receives the full seat object { id, seatNumber, morning, evening, isFulltime }
 // selectedSeatId — the id of the currently open bottom sheet seat (for highlight)
 export function SeatGrid({ onSeatTap, selectedSeatId }) {
-  const seats = useSeatsStore((state) => state.seats)
-  const isLoaded = useSeatsStore((state) => state.isLoaded)
+  const seats = useSeatsStore((state) => state.seats);
+  const isLoaded = useSeatsStore((state) => state.isLoaded);
 
   // Show spinner while initial data is being hydrated into Zustand
   if (!isLoaded) {
-    return <LoadingSpinner label="Loading seat map..." />
+    return <LoadingSpinner label="Loading seat map..." />;
   }
 
   if (seats.length === 0) {
@@ -22,7 +22,7 @@ export function SeatGrid({ onSeatTap, selectedSeatId }) {
       <div className="flex items-center justify-center py-10">
         <p className="text-sm text-gray-500">No seats configured.</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -45,14 +45,14 @@ export function SeatGrid({ onSeatTap, selectedSeatId }) {
           </div>
           <span className="text-xs text-gray-500">Partial</span>
         </div>
-        <div className="ml-auto text-xs text-gray-400">
-          Top = Morning · Bottom = Evening
+        <div className="flex flex-col gap-1 ml-auto text-xs text-gray-400">
+          <span>Top = Morning</span> <span>Bottom = Evening</span>
         </div>
       </div>
 
       {/* 7-column grid */}
       {/* gap-1.5 gives ~6px between cells — enough to distinguish without wasting space */}
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-7 gap-2">
         {seats.map((seat) => (
           <SeatCell
             key={seat.id}
@@ -67,5 +67,5 @@ export function SeatGrid({ onSeatTap, selectedSeatId }) {
         ))}
       </div>
     </div>
-  )
+  );
 }

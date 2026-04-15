@@ -3,8 +3,8 @@
 
 import { useLayoutEffect, useState, useCallback } from 'react'
 import useSeatsStore from '@/stores/useSeatsStore'
-import { SeatGrid } from '@/components/seats/SeatGrid'
 import { SeatBottomSheet } from './SeatBottomSheet'
+import { SeatGrid } from '@/components/seates/SeatGrid'
 
 // initialSeats — array of transformed seat objects from the server
 //                already in the format useSeatsStore expects

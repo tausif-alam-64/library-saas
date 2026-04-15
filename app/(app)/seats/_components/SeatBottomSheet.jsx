@@ -132,8 +132,8 @@ export function SeatBottomSheet({ seat, onClose }) {
           </button>
         </div>
 
-        {/* Slot sections */}
-        <div className="px-5 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+        {/* Slot sections      here we add pb-20 so that nothing is hide beneath bottomNav and max-h-[60dvh] for dynamic viewport height*/}
+        <div className="px-5 py-4 space-y-3 max-h-[60dvh] overflow-y-auto pb-20">
           {seat && (
             <>
               {/* Fulltime — show as single section */}

@@ -27,7 +27,7 @@ export function SeatCell({
 
   return (
     <button
-      onClick={() => onTap({ id, seatNumber, morning, evening, isFulltime })}
+      onClick={() => onTap({ id, seat_number: seatNumber, morning, evening, is_fulltime: isFulltime })}
       aria-label={`Seat ${seatNumber}`}
       // touch-manipulation removes 300ms tap delay on mobile
       // select-none prevents text selection on long press

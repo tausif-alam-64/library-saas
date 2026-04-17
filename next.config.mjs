@@ -1,7 +1,7 @@
 import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ['192.168.1.15'],
+  allowedDevOrigins: ['192.168.1.24'],
   images: {
     remotePatterns: [
       {

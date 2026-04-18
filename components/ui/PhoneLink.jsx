@@ -12,8 +12,9 @@ export function PhoneLink({ phone, className = '' }) {
 
   return (
     <a
+      style={{minHeight: "20px"}}
       href={`tel:${phone}`}
-      className={`text-blue-600 underline underline-offset-2
+      className={`text-blue-600 underline underline-offset-2 
                   active:text-blue-800 touch-manipulation ${className}`}
     >
       {formatPhone(phone)}

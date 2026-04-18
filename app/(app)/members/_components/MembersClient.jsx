@@ -143,6 +143,8 @@ export function MembersClient({ initialMembers, totalCount }) {
         </div>
       </div>
 
+      <div className="h-14" />
+
       {/* Results count */}
       {searchQuery && (
         <p className="px-4 py-2 text-xs text-gray-400">

@@ -98,20 +98,21 @@ export function SeatBottomSheet({ seat, onClose }) {
         aria-label={seat ? `Seat ${seat.seat_number} details` : 'Seat details'}
         className={`
           fixed bottom-0 left-0 right-0 z-50
-          bg-white rounded-t-2xl
-          transition-transform duration-300 ease-out
-          ${isOpen ? 'translate-y-0' : 'translate-y-full'}
+    bg-white rounded-t-2xl
+    transition-transform duration-300 ease-out
+    max-h-[85dvh] flex flex-col
+    ${isOpen ? 'translate-y-0' : 'translate-y-full'}
         `}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-2 pb-4
-                        border-b border-gray-100">
+                        border-b border-gray-100 shrink-0">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
               Seat {seat?.seat_number}
@@ -132,8 +133,8 @@ export function SeatBottomSheet({ seat, onClose }) {
           </button>
         </div>
 
-        {/* Slot sections      here we add pb-20 so that nothing is hide beneath bottomNav and max-h-[60dvh] for dynamic viewport height*/}
-        <div className="px-5 py-4 space-y-3 max-h-[60dvh] overflow-y-auto pb-20">
+        {/* Slot sections      here we add pb-20 so that nothing is hide beneath bottomNav and moving max-h-[60dvh] for dynamic viewport height and put it on the whole sheet instead */}
+        <div className="px-5 py-4 space-y-3 overflow-y-auto pb-20">
           {seat && (
             <>
               {/* Fulltime — show as single section */}

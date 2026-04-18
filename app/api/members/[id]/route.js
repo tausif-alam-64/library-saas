@@ -111,6 +111,8 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+
+  const { id } = await params
   const supabase = await createClient()
 
   const { partner, error: authError } = await getPartner(supabase)
@@ -134,7 +136,7 @@ export async function DELETE(request, { params }) {
     const { data: existing, error: fetchError } = await supabase
       .from('members')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('library_id', partner.library_id)
       .is('deleted_at', null)
       .single()
@@ -152,7 +154,7 @@ export async function DELETE(request, { params }) {
     await supabase
       .from('members')
       .update({ deleted_at: now, updated_at: now })
-      .eq('id', params.id)
+      .eq('id', id)
 
     // End all active allocations
     await supabase
@@ -162,7 +164,7 @@ export async function DELETE(request, { params }) {
         end_date: now.split('T')[0],
         updated_at: now,
       })
-      .eq('member_id', params.id)
+      .eq('member_id', id)
       .eq('library_id', partner.library_id)
       .eq('is_active', true)
 
@@ -171,7 +173,7 @@ export async function DELETE(request, { params }) {
       partner_id: partner.id,
       action: 'delete_member',
       entity_type: 'member',
-      entity_id: params.id,
+      entity_id: id,
       old_data: existing,
       new_data: { deleted_at: now },
     })

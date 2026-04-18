@@ -254,7 +254,6 @@ export function MemberActions({ member, currentAllocation }) {
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 bg-gray-200 rounded-full" />
           </div>
-
           <div className="px-4 pb-4">
             <div className="flex items-center justify-between py-3 mb-1">
               <h2 className="text-base font-semibold text-gray-900">Edit details</h2>

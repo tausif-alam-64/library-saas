@@ -7,6 +7,8 @@ import { writeAuditLog } from '@/lib/audit'
 import { ERROR_CODES } from '@/utils/constants'
 
 export async function PATCH(request, { params }) {
+
+  const {id} = await params
   const supabase = await createClient()
 
   const { partner, error: authError } = await getPartner(supabase)
@@ -48,7 +50,7 @@ export async function PATCH(request, { params }) {
     const { data: existing, error: fetchError } = await supabase
       .from('seat_allocations')
       .select('id, seat_id, member_id, shift, library_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('library_id', partner.library_id)
       .eq('is_active', true)
       .is('deleted_at', null)
@@ -69,7 +71,7 @@ export async function PATCH(request, { params }) {
         end_date,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -80,7 +82,7 @@ export async function PATCH(request, { params }) {
       partner_id: partner.id,
       action: 'end_allocation',
       entity_type: 'seat_allocation',
-      entity_id: params.id,
+      entity_id: id,
       old_data: existing,
       new_data: updated,
     })

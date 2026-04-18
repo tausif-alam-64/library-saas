@@ -7,6 +7,7 @@ import { writeAuditLog } from '@/lib/audit'
 import { ERROR_CODES } from '@/utils/constants'
 
 export async function PATCH(request, { params }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const { partner, error: authError } = await getPartner(supabase)
@@ -51,7 +52,7 @@ export async function PATCH(request, { params }) {
     const { data: member, error: fetchError } = await supabase
       .from('members')
       .select('id, name, status, library_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('library_id', partner.library_id)
       .is('deleted_at', null)
       .single()
@@ -77,7 +78,7 @@ export async function PATCH(request, { params }) {
     const { data: updatedMember, error: updateError } = await supabase
       .from('members')
       .update({ status: 'inactive', updated_at: now })
-      .eq('id', params.id)
+      .eq('id', id)
       .select('id, name, status')
       .single()
 
@@ -87,7 +88,7 @@ export async function PATCH(request, { params }) {
     const { data: freedAllocations } = await supabase
       .from('seat_allocations')
       .update({ is_active: false, end_date: today, updated_at: now })
-      .eq('member_id', params.id)
+      .eq('member_id', id)
       .eq('library_id', partner.library_id)
       .eq('is_active', true)
       .select('seat_id, shift')
@@ -95,7 +96,7 @@ export async function PATCH(request, { params }) {
     // Step 3 — write to member_status_logs for complete audit trail
     await supabase.from('member_status_logs').insert({
       library_id: partner.library_id,
-      member_id: params.id,
+      member_id: id,
       old_status: member.status,
       new_status: 'inactive',
       changed_by_partner_id: partner.id,
@@ -108,7 +109,7 @@ export async function PATCH(request, { params }) {
       partner_id: partner.id,
       action: 'mark_member_inactive',
       entity_type: 'member',
-      entity_id: params.id,
+      entity_id: id,
       old_data: { status: member.status },
       new_data: { status: 'inactive', reason: reason || null },
     })

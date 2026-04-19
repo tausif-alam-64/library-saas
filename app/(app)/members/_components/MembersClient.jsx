@@ -142,8 +142,8 @@ export function MembersClient({ initialMembers, totalCount }) {
           })}
         </div>
       </div>
-
-      <div className="h-14" />
+      {/* searchbar and filter pill cover member list that why we need to add extra spacer on the top of member list */}
+      <div className="h-14" />      
 
       {/* Results count */}
       {searchQuery && (

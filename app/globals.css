@@ -1,39 +1,95 @@
 @import "tailwindcss";
 
-:root {
-   /*  Semantic colors  */
+/* ─── Tailwind v4 Design Tokens ──────────────────────────────────────────────
+   @theme is v4's replacement for tailwind.config.js theme.extend.
+   
+   Naming rule: --color-X generates bg-X, text-X, border-X utilities.
+   Example: --color-primary → bg-primary, text-primary, border-primary
+   
+   IMPORTANT: Use literal hex values here (not var()), so Tailwind can
+   compute opacity variants like bg-primary/5, bg-primary/10, etc.
+   The :root block below mirrors these for direct style={} usage.
+────────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Brand */
+  --color-primary: #111111;
+  --color-surface: #ffffff;
+  --color-border:  #e5e5e5;
+  --color-muted:   #6b7280;
+
+  /* Semantic */
   --color-success: #16a34a;
   --color-warning: #d97706;
-  --color-danger: #dc2626;
-  --color-info: #2563eb;
+  --color-danger:  #dc2626;
+  --color-info:    #2563eb;
 
-  /* Fee status colors */
-  --fee-paid-bg: #f0fdf4;
-  --fee-paid-text: #15803d;
-  --fee-grace-bg: #fffbeb;
-  --fee-grace-text: #b45309;
-  --fee-overdue-bg: #fef2f2;
-  --fee-overdue-text: #b91c1c;
+  /* Fee status
+     Usage: bg-fee-paid-bg, text-fee-paid-text, bg-fee-grace-bg, etc. */
+  --color-fee-paid-bg:      #f0fdf4;
+  --color-fee-paid-text:    #15803d;
+  --color-fee-grace-bg:     #fffbeb;
+  --color-fee-grace-text:   #b45309;
+  --color-fee-overdue-bg:   #fef2f2;
+  --color-fee-overdue-text: #b91c1c;
 
-  /* Seat map colors */
-  --seat-free: #dcfce7;
-  --seat-free-border: #16a34a;
-  --seat-occupied: #fee2e2;
-  --seat-occupied-border: #dc2626;
+  /* Seat map
+     Usage: bg-seat-free, border-seat-free-border, bg-seat-occupied, border-seat-occupied-border */
+  --color-seat-free:             #dcfce7;
+  --color-seat-free-border:      #16a34a;
+  --color-seat-occupied:         #fee2e2;
+  --color-seat-occupied-border:  #dc2626;
+
+  /* Tap target sizes
+     Usage: min-h-tap, min-w-tap */
+  --min-height-tap: 44px;
+  --min-width-tap:  44px;
 }
 
-/* ─── Base overrides on top of Tailwind preflight ────────────────────────── */
+/* ─── CSS custom properties for direct var() usage ───────────────────────────
+   These mirror @theme values so you can write:
+     style={{ color: 'var(--fee-paid-text)' }}
+     style={{ background: 'var(--color-primary)' }}
+   Keep in sync with @theme above if you ever change a color.
+────────────────────────────────────────────────────────────────────────────── */
+:root {
+  --color-primary: #111111;
+  --color-surface: #ffffff;
+  --color-border:  #e5e5e5;
+  --color-muted:   #6b7280;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger:  #dc2626;
+  --color-info:    #2563eb;
+
+  --fee-paid-bg:      #f0fdf4;
+  --fee-paid-text:    #15803d;
+  --fee-grace-bg:     #fffbeb;
+  --fee-grace-text:   #b45309;
+  --fee-overdue-bg:   #fef2f2;
+  --fee-overdue-text: #b91c1c;
+
+  --seat-free:             #dcfce7;
+  --seat-free-border:      #16a34a;
+  --seat-occupied:         #fee2e2;
+  --seat-occupied-border:  #dc2626;
+}
+
+/* ─── Base overrides ─────────────────────────────────────────────────────── */
 
 html {
+  /* Prevent iOS font size inflation on rotate */
   -webkit-text-size-adjust: 100%;
+  /* Prevent layout shift when scrollbar appears/disappears on desktop */
   scrollbar-gutter: stable;
 }
 
 body {
+  /* Prevent rubber-band overscroll on iOS — makes app feel native */
   overscroll-behavior: none;
 }
 
-/* ─── Minimum tap target ─────────────────────────────────────────────────── */
+/* ─── Minimum tap target (Apple HIG: 44×44px) ───────────────────────────── */
+/* Applies globally so you never need min-h-tap on individual elements */
 a,
 button,
 [role="button"],
@@ -46,11 +102,13 @@ label[for] {
 }
 
 /* ─── iOS momentum scrolling ─────────────────────────────────────────────── */
+/* Without this, scrollable containers feel laggy on iPhone */
 * {
   -webkit-overflow-scrolling: touch;
 }
 
-/* ─── Focus visible — keyboard only ─────────────────────────────────────── */
+/* ─── Keyboard-only focus ring ───────────────────────────────────────────── */
+/* No ring on mouse/touch click. Ring appears for keyboard navigation. */
 :focus {
   outline: none;
 }
@@ -58,4 +116,17 @@ label[for] {
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* ─── Custom utilities ───────────────────────────────────────────────────── */
+
+/* scrollbar-hide — used on filter pills row in members list */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;   /* IE/Edge */
+    scrollbar-width: none;      /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;              /* Chrome/Safari/Opera */
+  }
 }

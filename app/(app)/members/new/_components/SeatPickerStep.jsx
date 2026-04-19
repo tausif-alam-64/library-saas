@@ -75,7 +75,7 @@ export function SeatPickerStep({
     setTimeout(() => {
       shiftSectionRef.current?.scrollIntoView({
         behavior: 'smooth',
-        block: 'nearest',
+        block: 'center',
       })
     }, 80)
   }

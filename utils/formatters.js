@@ -75,9 +75,13 @@ export function formatShift(shift) {
   return map[shift] || shift
 }
 
-// Format a date as YYYY-MM-DD for database inserts
-// toDbDate(new Date()) → "2025-04-06"
+// toDbDate — formats a Date object as YYYY-MM-DD using LOCAL timezone
+// Never use .toISOString() for date-only strings — it converts to UTC
+// and in IST (UTC+5:30) midnight local = previous day UTC, shifting date back by 1
 export function toDbDate(date) {
   const d = date instanceof Date ? date : new Date(date)
-  return d.toISOString().split('T')[0]
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }

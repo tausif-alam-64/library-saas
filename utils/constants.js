@@ -21,6 +21,7 @@ export const FEE_STATUS = {
   PAID: 'paid',
   GRACE: 'grace',
   OVERDUE: 'overdue',
+  UNPAID: 'unpaid', // Never made any payment — brand new or first month
 }
 
 export const PAYMENT_MODES = {

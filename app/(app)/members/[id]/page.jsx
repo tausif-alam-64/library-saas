@@ -10,6 +10,7 @@ import { PaymentHistory } from './_components/PaymentHistory'
 import { AllocationHistory } from './_components/AllocationHistory'
 import { MemberActions } from './_components/MemberActions'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { toDbDate } from '@/utils/formatters'
 
 export default async function MemberProfilePage({ params }) {
   // In Next.js 15+, params is a Promise — must be awaited before accessing properties
@@ -143,13 +144,14 @@ export default async function MemberProfilePage({ params }) {
     currentPeriodStart = next.start
     currentPeriodEnd = next.end
   } else {
-    // Never paid — current period is this month
-    const today = new Date()
-    const start = new Date(today.getFullYear(), today.getMonth(), 1)
-    const end = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-    currentPeriodStart = start.toISOString().split('T')[0]
-    currentPeriodEnd = end.toISOString().split('T')[0]
-  }
+  const today = new Date()
+  const start = new Date(today.getFullYear(), today.getMonth(), 1)
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+  // Use toDbDate — not toISOString() — to prevent UTC timezone shift
+  // toISOString() at midnight IST converts to previous day UTC
+  currentPeriodStart = toDbDate(start)
+  currentPeriodEnd = toDbDate(end)
+}
 
   const feeInfo = {
     status: feeComputed.status,

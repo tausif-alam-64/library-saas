@@ -44,6 +44,15 @@ export async function PATCH(request, { params }) {
       { status: 400 }
     )
   }
+ // If no end_date provided, use today in local timezone on the server
+// This is safer than relying on the client to send the correct date
+const endDate = body.end_date || (() => {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+})()
 
   try {
     // Verify this allocation belongs to the partner's library
@@ -68,7 +77,7 @@ export async function PATCH(request, { params }) {
       .from('seat_allocations')
       .update({
         is_active: false,
-        end_date,
+        endDate,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

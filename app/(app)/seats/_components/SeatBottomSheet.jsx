@@ -7,6 +7,7 @@ import { RoleGuard } from '@/components/ui/RoleGuard'
 import { FeeStatusBadge } from '@/components/ui/FeeStatusBadge'
 import { ROUTES, SHIFTS } from '@/utils/constants'
 import useUIStore from '@/stores/useUIStore'
+import { toDbDate } from '@/utils/formatters'
 
 // seat — the full seat object from Zustand
 //        { id, seat_number, morning, evening, is_fulltime }
@@ -60,7 +61,9 @@ export function SeatBottomSheet({ seat, onClose }) {
           const res = await fetch(`/api/allocations/${allocationId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ end_date: new Date().toISOString().split('T')[0] }),
+            body: JSON.stringify({ 
+              end_date: toDbDate(new Date()),
+             }),
           })
 
           if (!res.ok) {

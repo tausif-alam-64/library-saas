@@ -71,8 +71,8 @@ export async function PATCH(request, { params }) {
       )
     }
 
-    const now = new Date().toISOString()
-    const today = now.split('T')[0]
+    const d = new Date()
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
     // Step 1 — update member status
     const { data: updatedMember, error: updateError } = await supabase

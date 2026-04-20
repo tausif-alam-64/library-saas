@@ -58,12 +58,12 @@ export function SeatBottomSheet({ seat, onClose }) {
       danger: true,
       onConfirm: async () => {
         try {
+          // No date sent from client — server uses its own local date
+          // This prevents timezone bugs where client midnight = yesterday UTC
           const res = await fetch(`/api/allocations/${allocationId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              end_date: toDbDate(new Date()),
-             }),
+            body:    JSON.stringify({}),
           })
 
           if (!res.ok) {

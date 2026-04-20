@@ -7,6 +7,7 @@ import { writeAuditLog } from '@/lib/audit'
 import { ERROR_CODES } from '@/utils/constants'
 
 export async function PATCH(request, { params }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const { partner, error: authError } = await getPartner(supabase)
@@ -59,7 +60,7 @@ export async function PATCH(request, { params }) {
     const { data: existing, error: fetchError } = await supabase
       .from('members')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('library_id', partner.library_id)
       .is('deleted_at', null)
       .single()
@@ -82,7 +83,7 @@ export async function PATCH(request, { params }) {
     const { data: updated, error: updateError } = await supabase
       .from('members')
       .update(updates)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('library_id', partner.library_id)
       .select()
       .single()
@@ -94,7 +95,7 @@ export async function PATCH(request, { params }) {
       partner_id: partner.id,
       action: 'update_member',
       entity_type: 'member',
-      entity_id: params.id,
+      entity_id: id,
       old_data: existing,
       new_data: updated,
     })

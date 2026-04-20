@@ -6,9 +6,16 @@ import { getPartner, requirePrimary } from '@/lib/auth'
 import { writeAuditLog } from '@/lib/audit'
 import { ERROR_CODES } from '@/utils/constants'
 
-export async function PATCH(request, { params }) {
+function localDateString() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
-  const {id} = await params
+export async function PATCH(request, { params }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const { partner, error: authError } = await getPartner(supabase)
@@ -37,25 +44,12 @@ export async function PATCH(request, { params }) {
     )
   }
 
-  const { end_date } = body
-  if (!end_date) {
-    return NextResponse.json(
-      { error: ERROR_CODES.VALIDATION_ERROR, message: 'end_date is required', field: 'end_date' },
-      { status: 400 }
-    )
-  }
- // If no end_date provided, use today in local timezone on the server
-// This is safer than relying on the client to send the correct date
-const endDate = body.end_date || (() => {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-})()
+  // Use server-side local date as the authoritative value
+  // The client may send a wrong date due to timezone issues
+  // Server always wins for date-only values
+  const endDate = localDateString()
 
   try {
-    // Verify this allocation belongs to the partner's library
     const { data: existing, error: fetchError } = await supabase
       .from('seat_allocations')
       .select('id, seat_id, member_id, shift, library_id')
@@ -67,18 +61,20 @@ const endDate = body.end_date || (() => {
 
     if (fetchError || !existing) {
       return NextResponse.json(
-        { error: ERROR_CODES.NOT_FOUND, message: 'Allocation not found or already ended' },
+        {
+          error: ERROR_CODES.NOT_FOUND,
+          message: 'Allocation not found or already ended',
+        },
         { status: 404 }
       )
     }
 
-    // End the allocation
     const { data: updated, error: updateError } = await supabase
       .from('seat_allocations')
       .update({
-        is_active: false,
-        endDate,
-        updated_at: new Date().toISOString(),
+        is_active:   false,
+        end_date:    endDate,
+        updated_at:  new Date().toISOString(),
       })
       .eq('id', id)
       .select()
@@ -87,13 +83,13 @@ const endDate = body.end_date || (() => {
     if (updateError) throw updateError
 
     await writeAuditLog(supabase, {
-      library_id: partner.library_id,
-      partner_id: partner.id,
-      action: 'end_allocation',
+      library_id:  partner.library_id,
+      partner_id:  partner.id,
+      action:      'end_allocation',
       entity_type: 'seat_allocation',
-      entity_id: id,
-      old_data: existing,
-      new_data: updated,
+      entity_id:   id,
+      old_data:    existing,
+      new_data:    updated,
     })
 
     return NextResponse.json({ allocation: updated })

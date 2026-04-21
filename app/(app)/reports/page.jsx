@@ -12,6 +12,7 @@ import { PaidList }             from './_components/PaidList'
 import { UnpaidList }           from './_components/UnpaidList'
 import { ErrorState }           from '@/components/ui/ErrorState'
 import { ShareButton } from './_components/ShareButton'
+import Link from 'next/link'
 
 function localDateStr(date) {
   const y = date.getFullYear()
@@ -143,6 +144,7 @@ export default async function ReportsPage({ searchParams }) {
       monthPaymentByMember[p.member_id] = p
     }
   })
+  console.log('Payments order:', allPayments.map(p => ({id: p.id, date: p.paid_on,ammount: p.amount_paid})))
 
   // Allocation per member
   const allocByMember = {}
@@ -153,45 +155,56 @@ export default async function ReportsPage({ searchParams }) {
     }
   })
 
-  // ── Compute per-member data ───────────────────────────────────────────────
-  const membersData = (rawMembers || []).map((m) => {
-    const latestPayment  = latestPaymentByMember[m.id] || null
-    const monthPayment   = monthPaymentByMember[m.id] || null
-    const alloc          = allocByMember[m.id] || null
-    const feeResult      = computeFeeStatus(latestPayment, gracePeriodDays)
-    const shiftFee       = alloc ? fees[alloc.shift] || 500 : 500
+  // Set of member IDs who have ANY payment overlapping this month
+  const membersPaidThisMonth = new Set(monthPayments.map((p) => p.member_id))
+  
 
-    const paidThisMonth  = !!monthPayment
+  // ── Per-member data for status + display ─────────────────────────────────
+  const membersData = (rawMembers || []).map((m) => {
+    const latestPayment = latestPaymentByMember[m.id] || null
+    const alloc         = allocByMember[m.id] || null
+    const feeResult     = computeFeeStatus(latestPayment, gracePeriodDays)
+    const shiftFee      = alloc ? fees[alloc.shift] || 500 : 500
+
+    const paidThisMonth = membersPaidThisMonth.has(m.id)
 
     return {
-      id:                       m.id,
-      name:                     m.name,
-      seat_number:              alloc?.seat_number ?? null,
-      shift:                    alloc?.shift ?? null,
-      fee_status:               feeResult.status,
-      days_overdue:             feeResult.daysOverdue || 0,
-      days_left:                feeResult.daysLeft || 0,
-      amount_due:               shiftFee,
-      paid_this_month:          paidThisMonth,
-      // Payment details for paid list
-      amount_paid:              monthPayment ? Number(monthPayment.amount_paid) : 0,
-      paid_on:                  monthPayment?.paid_on || null,
-      collected_by_partner_name: monthPayment
-        ? (partnerMap[monthPayment.collected_by_partner_id] || 'Unknown')
-        : null,
-      payment_mode:             monthPayment?.payment_mode || null,
+      id:            m.id,
+      name:          m.name,
+      seat_number:   alloc?.seat_number ?? null,
+      shift:         alloc?.shift ?? null,
+      fee_status:    feeResult.status,
+      days_overdue:  feeResult.daysOverdue || 0,
+      days_left:     feeResult.daysLeft    || 0,
+      amount_due:    shiftFee,
+      paid_this_month: paidThisMonth,
     }
   })
 
-  // ── Split into paid and unpaid ────────────────────────────────────────────
-  const paidMembers   = membersData
-    .filter((m) => m.paid_this_month)
-    .sort((a, b) => a.name.localeCompare(b.name))
+  // ── Paid list: every payment row for this month (not one per member) ─────
+  // Sort by paid_on descending so newest payments are at top
+  const paidPayments = monthPayments
+    .map((p) => {
+      const member = (rawMembers || []).find((m) => m.id === p.member_id)
+      const alloc  = allocByMember[p.member_id] || null
+      return {
+        id:                        p.id,
+        member_id:                 p.member_id,
+        name:                      member?.name || 'Unknown',
+        seat_number:               alloc?.seat_number ?? null,
+        shift:                     alloc?.shift ?? null,
+        amount_paid:               Number(p.amount_paid),
+        paid_on:                   p.paid_on,
+        payment_mode:              p.payment_mode,
+        collected_by_partner_name: partnerMap[p.collected_by_partner_id] || 'Unknown',
+      }
+    })
+    .sort((a, b) => (b.paid_on > a.paid_on ? 1 : -1))
 
+    // ── Unpaid members ────────────────────────────────────────────────────────
   const unpaidMembers = membersData
     .filter((m) => !m.paid_this_month)
     .sort((a, b) => {
-      // Overdue first, then grace, then unpaid, then alphabetical
       const priority = { overdue: 0, grace: 1, unpaid: 2, paid: 3 }
       const pa = priority[a.fee_status] ?? 3
       const pb = priority[b.fee_status] ?? 3
@@ -199,20 +212,34 @@ export default async function ReportsPage({ searchParams }) {
       return a.name.localeCompare(b.name)
     })
 
-  // ── Summary calculations ──────────────────────────────────────────────────
-  const fee_collected   = Math.round(paidMembers.reduce((s, m) => s + m.amount_paid, 0))
-  const fee_expected    = Math.round(membersData.reduce((s, m) => s + m.amount_due, 0))
-  const fee_pending     = Math.round(unpaidMembers.reduce((s, m) => s + m.amount_due, 0))
-  const collection_rate = fee_expected > 0
-    ? Math.round((fee_collected / fee_expected) * 100)
+  // ── Correctly sum ALL payments in the month ─────────────────────────────
+  // Critical fix: do NOT group by member — sum every payment row directly
+  // A member may have multiple payments overlapping the month (edge case)
+  // and all should count toward the total
+  const fee_collected = Math.round(
+    monthPayments.reduce((sum, p) => sum + Number(p.amount_paid), 0)
+  )
+
+  // ── Summary ───────────────────────────────────────────────────────────────
+  // collection_rate is member-count based, not money based
+  // Money-based rate is misleading when prorated payments exist
+  const paid_member_count   = membersPaidThisMonth.size
+  const total_member_count  = membersData.length
+  const collection_rate     = total_member_count > 0
+    ? Math.round((paid_member_count / total_member_count) * 100)
     : 0
 
+  const fee_pending = Math.round(
+    unpaidMembers.reduce((sum, m) => sum + m.amount_due, 0)
+  )
+
   const summary = {
-    total_members: membersData.length,
-    fee_expected,
+    total_members:    total_member_count,
     fee_collected,
     fee_pending,
     collection_rate,
+    paid_count:       paid_member_count,
+    unpaid_count:     unpaidMembers.length,
   }
 
   // ── Per-partner breakdown ─────────────────────────────────────────────────
@@ -280,8 +307,17 @@ export default async function ReportsPage({ searchParams }) {
           <div className="flex-1">
             <MonthSelectorClient month={month} year={year} />
           </div>
+          <Link
+             href={ROUTES.PAYMENTS}
+             className="flex items-center gap-1 h-9 px-3 rounded-xl
+                         bg-gray-100 text-gray-700 text-xs font-semibold
+                         active:bg-gray-200 touch-manipulation no-underline shrink-0"
+             >
+                All payments
+             </Link>
           {/* WhatsApp share — client component embedded */}
           <ShareButton shareText={shareText} />
+          
         </div>
       </div>
 
@@ -300,7 +336,7 @@ export default async function ReportsPage({ searchParams }) {
       <UnpaidList members={unpaidMembers} />
 
       {/* Paid members */}
-      <PaidList members={paidMembers} />
+      <PaidList payments={paidPayments} />
     </div>
   )
 }

@@ -67,6 +67,7 @@ export const ROUTES = {
   SETTINGS_PARTNERS: '/settings/partners',
   SETTINGS_SEATS: '/settings/seats',
   SETTINGS_FEES: '/settings/fees',
+  PAYMENTS: '/payments',
 }
 
 // API error codes — match exactly what every API route returns

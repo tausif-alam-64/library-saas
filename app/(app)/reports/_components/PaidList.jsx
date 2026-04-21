@@ -3,44 +3,48 @@
 import { formatCurrency, formatDate, formatShift } from '@/utils/formatters'
 import { EmptyState } from '@/components/ui/EmptyState'
 
-// members — [{ id, name, seat_number, shift, amount_paid,
-//              paid_on, collected_by_partner_name, payment_mode }]
+// payments — every payment row overlapping this month
+// (may have multiple entries for the same member if they paid twice)
 
-export function PaidList({ members }) {
+export function PaidList({ payments }) {
   return (
     <div className="px-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
-          Paid this month
+          Payments this month
         </h2>
-        <span className="text-xs font-bold text-success">
-          {members.length} members
-        </span>
+        {payments.length > 0 && (
+          <span className="text-xs font-bold text-success">
+            {payments.length} payment{payments.length !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
       <div className="bg-surface rounded-2xl border border-gray-100 overflow-hidden">
-        {members.length === 0 ? (
+        {payments.length === 0 ? (
           <EmptyState message="No payments recorded this month" />
         ) : (
-          members.map((m, i) => (
+          payments.map((p) => (
             <div
-              key={m.id + '-' + i}
+              key={p.id}
               className="flex items-center gap-3 px-4 py-3
                          border-b border-gray-50 last:border-b-0"
             >
               {/* Avatar */}
               <div className="w-9 h-9 rounded-full bg-green-100 flex items-center
                               justify-center text-xs font-bold text-success shrink-0">
-                {m.name.charAt(0).toUpperCase()}
+                {p.name.charAt(0).toUpperCase()}
               </div>
 
               {/* Details */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-primary truncate">{m.name}</p>
+                <p className="text-sm font-semibold text-primary truncate">
+                  {p.name}
+                </p>
                 <p className="text-xs text-muted">
-                  {m.seat_number
-                    ? `Seat ${m.seat_number} · ${formatShift(m.shift)}`
-                    : formatShift(m.shift)
+                  {p.seat_number
+                    ? `Seat ${p.seat_number} · ${formatShift(p.shift)}`
+                    : (p.shift ? formatShift(p.shift) : '')
                   }
                 </p>
               </div>
@@ -48,14 +52,10 @@ export function PaidList({ members }) {
               {/* Right */}
               <div className="text-right shrink-0">
                 <p className="text-sm font-bold text-success">
-                  {formatCurrency(m.amount_paid)}
+                  {formatCurrency(p.amount_paid)}
                 </p>
                 <p className="text-[10px] text-muted">
-                  {formatDate(m.paid_on)}
-                  {m.collected_by_partner_name
-                    ? ` · ${m.collected_by_partner_name}`
-                    : ''
-                  }
+                  {formatDate(p.paid_on)} · {p.collected_by_partner_name}
                 </p>
               </div>
             </div>

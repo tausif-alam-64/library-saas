@@ -17,11 +17,15 @@ import { OfflineBanner } from '@/components/ui/OfflineBanner'
 export function AppShell({ partner, library, children }) {
   const setSession = useAppStore((state) => state.setSession)
 
-  // useLayoutEffect runs synchronously before the browser paints
-  // This guarantees Zustand is populated before any child renders
+   // Run on EVERY render — not just when id changes.
+  // When grace_period_days, morning_cutoff_time, or no_show_days changes
+  // via /settings, the server layout re-renders AppShell with new props.
+  // Without running setSession again, Zustand holds stale values.
+  // useLayoutEffect with no deps runs synchronously before every paint —
+  // safe because setSession is a simple Zustand set() call.
   useLayoutEffect(() => {
     setSession(partner, library)
-  }, [partner.id, library.id])
+  })
 
   return (
     <div style={{

@@ -144,7 +144,6 @@ export default async function ReportsPage({ searchParams }) {
       monthPaymentByMember[p.member_id] = p
     }
   })
-  console.log('Payments order:', allPayments.map(p => ({id: p.id, date: p.paid_on,ammount: p.amount_paid})))
 
   // Allocation per member
   const allocByMember = {}

@@ -4,9 +4,6 @@ import Link from 'next/link'
 import { ROUTES } from '@/utils/constants'
 import { formatDate, formatShift } from '@/utils/formatters'
 
-// members — [{ id, name, seat_number, shift, expiry_date }]
-//           sorted by expiry_date ascending (soonest first)
-
 export function ExpiringList({ members }) {
   if (members.length === 0) return null
 
@@ -19,12 +16,16 @@ export function ExpiringList({ members }) {
 
       <div className="bg-surface rounded-2xl border border-amber-100 overflow-hidden">
         {members.map((m) => {
-          const expiry    = new Date(m.expiry_date)
-          const today     = new Date()
-          today.setHours(0, 0, 0, 0)
+          // Parse as local date components — never new Date(string) which parses UTC
+          const [ey, em, ed] = m.expiry_date.split('-').map(Number)
+          const expiry = new Date(ey, em - 1, ed)
           expiry.setHours(0, 0, 0, 0)
-          const daysLeft  = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
-          const isToday   = daysLeft === 0
+
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          const daysLeft   = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
+          const isToday    = daysLeft === 0
           const isTomorrow = daysLeft === 1
 
           return (
@@ -35,18 +36,19 @@ export function ExpiringList({ members }) {
                          border-b border-amber-50 last:border-b-0
                          active:bg-amber-50 touch-manipulation no-underline"
             >
-              {/* Days indicator */}
               <div className={`w-10 h-10 rounded-xl flex flex-col items-center
                                justify-center shrink-0 text-center
-                               ${isToday ? 'bg-danger text-white' :
-                                 isTomorrow ? 'bg-warning text-white' :
-                                 'bg-amber-100 text-amber-800'}`}>
+                               ${isToday
+                                 ? 'bg-danger text-white'
+                                 : isTomorrow
+                                   ? 'bg-warning text-white'
+                                   : 'bg-amber-100 text-amber-800'
+                               }`}>
                 <span className="text-[10px] font-medium leading-none">
                   {isToday ? 'Today' : isTomorrow ? 'Tmrw' : `${daysLeft}d`}
                 </span>
               </div>
 
-              {/* Details */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-primary truncate">
                   {m.name}
@@ -56,7 +58,6 @@ export function ExpiringList({ members }) {
                 </p>
               </div>
 
-              {/* Expiry date */}
               <div className="text-right shrink-0">
                 <p className="text-xs text-muted">expires</p>
                 <p className="text-xs font-medium text-primary">

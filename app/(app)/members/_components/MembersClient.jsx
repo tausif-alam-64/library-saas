@@ -18,35 +18,35 @@ const FILTERS = [
   { key: 'inactive', label: 'Inactive' },
 ]
 
-// Sort members by urgency:
-// 1. Overdue — most days overdue first (most urgent)
-// 2. Grace — least days left first (most urgent)
-// 3. Paid — alphabetical
-// 4. Inactive — alphabetical (only shown when inactive filter is active)
 function sortMembers(members) {
-  const priority = { overdue: 0, grace: 1, paid: 2 }
+  // Priority order: overdue (most urgent) → grace → unpaid → paid
+  // Within each group: overdue sorts by days overdue desc (most overdue first)
+  //                    grace sorts by days left asc (least days left = most urgent)
+  //                    unpaid sorts alphabetically
+  //                    paid sorts alphabetically
+  const priority = {
+    [FEE_STATUS.OVERDUE]: 0,
+    [FEE_STATUS.GRACE]:   1,
+    [FEE_STATUS.UNPAID]:  2,
+    [FEE_STATUS.PAID]:    3,
+  }
 
   return [...members].sort((a, b) => {
-    // Inactive goes last always
     if (a.status === 'inactive' && b.status !== 'inactive') return 1
     if (b.status === 'inactive' && a.status !== 'inactive') return -1
 
-    const aPri = priority[a.fee_status] ?? 3
-    const bPri = priority[b.fee_status] ?? 3
+    const pa = priority[a.fee_status] ?? 4
+    const pb = priority[b.fee_status] ?? 4
 
-    if (aPri !== bPri) return aPri - bPri
+    if (pa !== pb) return pa - pb
 
-    // Within overdue: most overdue first
     if (a.fee_status === FEE_STATUS.OVERDUE && b.fee_status === FEE_STATUS.OVERDUE) {
       return (b.days_overdue || 0) - (a.days_overdue || 0)
     }
-
-    // Within grace: least days left first (most urgent)
     if (a.fee_status === FEE_STATUS.GRACE && b.fee_status === FEE_STATUS.GRACE) {
       return (a.days_left || 0) - (b.days_left || 0)
     }
 
-    // Alphabetical for everything else
     return a.name.localeCompare(b.name, 'en-IN')
   })
 }

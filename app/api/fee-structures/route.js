@@ -143,41 +143,62 @@ export async function POST(request) {
       )
     }
 
-    // Close the current fee structure: valid_until = new valid_from - 1 day
+    // Step 1: Close the current fee structure first
+  if (currentFee) {
+    const valid_until = dateMinus1Day(valid_from)
+
+    const { error: closeError } = await supabase
+      .from('fee_structures')
+      .update({ valid_until })
+      .eq('id', currentFee.id)
+
+    // If we cannot close the old record, abort entirely
+    // Never proceed to insert — would create two active fee structures
+    if (closeError) {
+      console.error('[POST /api/fee-structures] Failed to close old fee structure:', closeError)
+      return NextResponse.json(
+        { error: ERROR_CODES.SERVER_ERROR, message: 'Failed to update fee structure. Please try again.' },
+        { status: 500 }
+      )
+    }
+  }
+
+  // Step 2: Insert new fee structure (only runs if step 1 succeeded)
+  const { data: newFee, error: insertError } = await supabase
+    .from('fee_structures')
+    .insert({
+      library_id:            partner.library_id,
+      morning_fee:           Number(morning_fee),
+      evening_fee:           Number(evening_fee),
+      fulltime_fee:          Number(fulltime_fee),
+      valid_from,
+      valid_until:           null,
+      created_by_partner_id: partner.id,
+    })
+    .select()
+    .single()
+
+  if (insertError) {
+    // If insert fails, try to re-open the old record
+    // (best-effort rollback — not a full transaction but better than nothing)
     if (currentFee) {
-      const valid_until = dateMinus1Day(valid_from)
       await supabase
         .from('fee_structures')
-        .update({ valid_until })
+        .update({ valid_until: null })
         .eq('id', currentFee.id)
     }
+    throw insertError
+  }
 
-    // Insert new fee structure
-    const { data: newFee, error: insertError } = await supabase
-      .from('fee_structures')
-      .insert({
-        library_id:            partner.library_id,
-        morning_fee:           Number(morning_fee),
-        evening_fee:           Number(evening_fee),
-        fulltime_fee:          Number(fulltime_fee),
-        valid_from,
-        valid_until:           null,
-        created_by_partner_id: partner.id,
-      })
-      .select()
-      .single()
-
-    if (insertError) throw insertError
-
-    await writeAuditLog(supabase, {
-      library_id:  partner.library_id,
-      partner_id:  partner.id,
-      action:      'update_fee_structure',
-      entity_type: 'fee_structure',
-      entity_id:   newFee.id,
-      old_data:    currentFee || null,
-      new_data:    newFee,
-    })
+  await writeAuditLog(supabase, {
+    library_id:  partner.library_id,
+    partner_id:  partner.id,
+    action:      'update_fee_structure',
+    entity_type: 'fee_structure',
+    entity_id:   newFee.id,
+    old_data:    currentFee || null,
+    new_data:    newFee,
+  })
 
     return NextResponse.json({ fee_structure: newFee }, { status: 201 })
 

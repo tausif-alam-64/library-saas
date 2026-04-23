@@ -60,17 +60,20 @@ const NAV_ITEMS = [
     isActive: (pathname) => pathname.startsWith(ROUTES.MEMBERS),
   },
   {
-    href: ROUTES.REPORTS,
-    label: 'Reports',
-    icon: (active) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M18 20V10M12 20V4M6 20v-6"
-          stroke="currentColor" strokeWidth="2.5"
-          strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    isActive: (pathname) => pathname.startsWith(ROUTES.REPORTS),
-  },
+  href:     ROUTES.REPORTS,
+  label:    'Reports',
+  // Active on /reports AND /payments (payments is a sub-section of reports)
+  isActive: (pathname) =>
+    pathname.startsWith(ROUTES.REPORTS) ||
+    pathname.startsWith(ROUTES.PAYMENTS),
+  icon: (active) => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M18 20V10M12 20V4M6 20v-6"
+        stroke="currentColor" strokeWidth="2.5"
+        strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+},
 ]
 
 export function BottomNav() {

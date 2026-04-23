@@ -18,11 +18,11 @@ export function SeatPickerStep({
   const isLoaded    = useSeatsStore((state) => state.isLoaded)
   const setSeats    = useSeatsStore((state) => state.setSeats)
 
-  // Hydrate store from server data if not already loaded
-  // This runs once — if the user visited /seats before, the store already
-  // has data and this is skipped. If not, initialSeats fills the gap.
+  // Always hydrate from server-provided data when we have it
+  // The server data is always fresh (fetched during this page render)
+  // The Zustand store may have stale data from a previous seat map visit
   useEffect(() => {
-    if (!isLoaded && initialSeats.length > 0) {
+      if (initialSeats.length > 0) {
       setSeats(initialSeats)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

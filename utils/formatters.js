@@ -12,25 +12,44 @@ export function formatCurrency(amount) {
   }).format(amount)
 }
 
-// Format a date object or ISO string for display
-// formatDate('2025-04-06') → "6 Apr 2025"
+// formatDate — parse as local date components to avoid UTC shift
+// formatDate('2026-04-30') → "30 Apr 2026"
 export function formatDate(date) {
   if (!date) return '—'
-  return new Intl.DateTimeFormat('en-IN', {
-    day: 'numeric',
+
+  let d
+  // If it's a YYYY-MM-DD string, parse as local date components
+  // to prevent UTC midnight → previous day IST conversion
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [y, m, day] = date.split('-').map(Number)
+    d = new Date(y, m - 1, day)
+  } else {
+    d = date instanceof Date ? date : new Date(date)
+  }
+
+  return d.toLocaleDateString('en-IN', {
+    day:   'numeric',
     month: 'short',
-    year: 'numeric',
-  }).format(new Date(date))
+    year:  'numeric',
+  })
 }
 
-// Format month and year for fee history display
-// formatMonthYear('2025-04-01') → "April 2025"
+// formatMonthYear('2026-04-01') → "April 2026"
 export function formatMonthYear(date) {
   if (!date) return '—'
-  return new Intl.DateTimeFormat('en-IN', {
+
+  let d
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [y, m, day] = date.split('-').map(Number)
+    d = new Date(y, m - 1, day)
+  } else {
+    d = date instanceof Date ? date : new Date(date)
+  }
+
+  return d.toLocaleDateString('en-IN', {
     month: 'long',
-    year: 'numeric',
-  }).format(new Date(date))
+    year:  'numeric',
+  })
 }
 
 // Format a phone number for display

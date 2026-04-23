@@ -13,17 +13,30 @@ import {
 } from '@/utils/formatters'
 
 // Groups payments by month for display
+// Replace the groupByMonth function entirely
+
 function groupByMonth(payments) {
   const groups = {}
   payments.forEach((p) => {
-    // Group by the paid_on date's month
+    // Parse paid_on as local date components to avoid UTC month shift
     const [y, m] = p.paid_on.split('-')
     const key    = `${y}-${m}`
-    if (!groups[key]) groups[key] = { key, label: formatMonthYear(`${key}-01`), payments: [], total: 0 }
+
+    if (!groups[key]) {
+      // Build month label using local date constructor — never new Date(string)
+      const label = new Date(
+        parseInt(y),
+        parseInt(m) - 1, // 0-indexed month
+        1
+      ).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+
+      groups[key] = { key, label, payments: [], total: 0 }
+    }
+
     groups[key].payments.push(p)
     groups[key].total += p.amount_paid
   })
-  // Return sorted newest first
+
   return Object.values(groups).sort((a, b) => b.key.localeCompare(a.key))
 }
 

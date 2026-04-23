@@ -103,7 +103,7 @@ export default async function DashboardPage() {
   const { data: rawAllocations, error: allocError } = await supabase
     .from('seat_allocations')
     .select(`
-      id, member_id, shift, is_active,
+      id, seat_id, member_id, shift, is_active,
       seats ( seat_number )
     `)
     .eq('library_id', libraryId)
@@ -226,7 +226,9 @@ export default async function DashboardPage() {
 
   // Unique seats occupied (a fulltime allocation occupies one physical seat)
   const occupiedSeatIds = new Set(
-    (rawAllocations || []).map((a) => a.seats?.seat_number).filter(Boolean)
+  (rawAllocations || [])
+    .map((a) => a.seat_id)  // seat_id from seat_allocations directly
+    .filter(Boolean)
   )
   const seats_occupied = occupiedSeatIds.size
 

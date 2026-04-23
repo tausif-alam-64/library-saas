@@ -7,15 +7,14 @@ import useSeatsStore from '@/stores/useSeatsStore'
 import useAppStore from '@/stores/useAppStore'
 
 export function RealtimeProvider({ children }) {
-  const library = useAppStore((state) => state.library)
+  const library                       = useAppStore((state) => state.library)
   const { markSeatOccupied, markSeatFree } = useSeatsStore()
 
   useEffect(() => {
-    // Do not subscribe until we know which library this partner belongs to
     if (!library?.id) return
 
     const supabase = createClient()
-
+    
     // One named channel per library
     // If this component re-renders, the channel name stays the same
     // so Supabase will reuse the existing connection instead of creating a new one
@@ -24,29 +23,43 @@ export function RealtimeProvider({ children }) {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event:  'INSERT',
           schema: 'public',
-          table: 'seat_allocations',
+          table:  'seat_allocations',
           filter: `library_id=eq.${library.id}`,
         },
-        (payload) => {
-          // A new seat was assigned — update only that seat in Zustand
-          // This does NOT re-fetch all 56 seats — it updates one cell
+        async (payload) => {
+          // Fetch member name to show in bottom sheet
+          // The payload only has member_id — not the name
+          let memberName = null
+          try {
+            const { data } = await supabase
+              .from('members')
+              .select('name')
+              .eq('id', payload.new.member_id)
+              .single()
+            memberName = data?.name || null
+          } catch {
+            // Non-critical — seat will still show as occupied (red)
+            // Name appears on next full page load
+          }
+
           markSeatOccupied(payload.new.seat_id, payload.new.shift, {
-            member_id: payload.new.member_id,
+            member_id:   payload.new.member_id,
+            member_name: memberName,
+            fee_status:  null, // Cannot compute without payment data
           })
         }
       )
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event:  'UPDATE',
           schema: 'public',
-          table: 'seat_allocations',
+          table:  'seat_allocations',
           filter: `library_id=eq.${library.id}`,
         },
         (payload) => {
-          // An allocation was ended (is_active flipped to false) — free the seat
           if (payload.new.is_active === false && payload.old.is_active === true) {
             markSeatFree(payload.new.seat_id, payload.new.shift)
           }
@@ -61,11 +74,8 @@ export function RealtimeProvider({ children }) {
         }
       })
 
-    // Cleanup when component unmounts (logout) or library changes
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [library?.id]) // Only re-run if library ID changes
+    return () => { supabase.removeChannel(channel) }
+  }, [library?.id])
 
   return children
 }

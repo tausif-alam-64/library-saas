@@ -22,6 +22,7 @@ export function PartnersManager({ partners, currentPartnerId, isPrimary }) {
   const [addErrors, setAddErrors] = useState({})
 
   const [editForm, setEditForm] = useState({})
+  const [showPassword, setShowPassword] = useState(false)
 
   function validateAdd() {
     const errs = {}
@@ -377,13 +378,35 @@ export function PartnersManager({ partners, currentPartnerId, isPrimary }) {
 
               {/* Temporary password */}
               <div>
-                <input
-                  type="text"
-                  placeholder="Temporary password (min 8 chars) *"
-                  value={addForm.temporary_password}
-                  onChange={(e) => setAddForm((f) => ({ ...f, temporary_password: e.target.value }))}
-                  className={inputCls}
-                />
+                <div className="relative ">
+                    <input
+                     type={showPassword ? 'text' : 'password'}
+                     placeholder="Temporary password (min 8 chars) *"
+                     value={addForm.temporary_password}
+                     onChange={(e) => setAddForm((f) => ({ ...f, temporary_password: e.target.value }))}
+                     className={inputCls}
+                    />
+                    <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted
+                                 touch-manipulation min-h-0 min-w-0"
+                     aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                        {showPassword ? (
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"
+                            stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        ) : (
+                        <>
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                            stroke="currentColor" strokeWidth="2"/>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+                        </>
+                        )}
+                    </svg>
+                    </button>
+                </div>
                 <p className="text-[10px] text-muted mt-1">
                   Share this with the partner — they can change it after logging in
                 </p>

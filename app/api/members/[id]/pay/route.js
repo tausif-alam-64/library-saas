@@ -97,6 +97,27 @@ export async function POST(request, { params }) {
       )
     }
 
+    // Prevent duplicate payment for same period
+    const { data: existingPayment } = await supabase
+      .from('fee_payments')
+      .select('id')
+      .eq('member_id', id)
+      .eq('library_id', partner.library_id)
+      .eq('period_start_date', body.period_start_date)
+      .eq('period_end_date', body.period_end_date)
+      .is('deleted_at', null)
+      .maybeSingle()
+
+    if (existingPayment) {
+      return NextResponse.json(
+        {
+          error:   ERROR_CODES.VALIDATION_ERROR,
+          message: 'A payment for this exact period has already been recorded. Check payment history before proceeding.',
+          },
+        { status: 400 }
+      )
+    }
+
     // Insert the payment record
     const { data: payment, error: insertError } = await supabase
       .from('fee_payments')

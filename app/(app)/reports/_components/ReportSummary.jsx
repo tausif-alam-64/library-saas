@@ -50,7 +50,7 @@ export function ReportSummary({ summary }) {
         <div className={`bg-surface rounded-xl border p-3 text-center
           ${summary.fee_pending > 0 ? 'border-red-100' : 'border-gray-100'}`}>
           <p className="text-[10px] font-semibold uppercase tracking-wider
-                        text-muted mb-1">Pending</p>
+                        text-muted mb-1">Pending (est.)</p>
           <p className={`text-sm font-bold leading-tight
             ${summary.fee_pending > 0 ? 'text-danger' : 'text-success'}`}>
             {formatCurrency(summary.fee_pending)}

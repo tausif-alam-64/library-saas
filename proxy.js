@@ -30,18 +30,20 @@ export async function proxy(request) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  // getUser() validates the token with Supabase Auth server
+  // getSession() only reads from cookie cache — stale/revoked tokens pass through
+  const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isLoginPage = pathname.startsWith('/login')
+  const isLoginPage  = pathname.startsWith('/login')
 
-  if (!session && !isLoginPage) {
+  if (!user && !isLoginPage) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  if (session && isLoginPage) {
+  if (user && isLoginPage) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
@@ -50,6 +52,6 @@ export async function proxy(request) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icon-192.png|icon-512.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icon-192.png|icon-512.png|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

@@ -2,8 +2,9 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getPartner } from '@/lib/auth'
+import { getPartner, requirePrimary } from '@/lib/auth'
 import { ERROR_CODES } from '@/utils/constants'
+import { writeAuditLog } from '@/lib/audit'
 
 export async function GET() {
   const supabase = await createClient()

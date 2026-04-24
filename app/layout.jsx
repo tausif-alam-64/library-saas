@@ -3,6 +3,7 @@
 import { Inter } from 'next/font/google'
 import { AppProviders } from '@/providers/AppProviders'
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import './globals.css'
 
 const inter = Inter({
@@ -41,8 +42,11 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-gray-50 overscroll-none">
         <AppProviders>
-          <Analytics />
+          
           {children}
+
+          <Analytics />
+          <SpeedInsights />
         </AppProviders>
       </body>
     </html>

@@ -67,7 +67,7 @@ export function FeeSection({ memberId, feeInfo }) {
               </p>
             ) : (
               <p className="text-sm font-semibold text-gray-900 mt-0.5">
-                {formatCurrency(feeInfo.amountDue)} due
+                {feeInfo.isProrated ? formatCurrency(feeInfo.displayAmount) : formatCurrency(feeInfo.amountDue)} due
               </p>
             )}
           </div>

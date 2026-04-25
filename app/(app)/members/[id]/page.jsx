@@ -2,7 +2,7 @@
 
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { computeFeeStatus, nextPaymentPeriod, isFirstOfMonth } from '@/lib/calculations'
+import { computeFeeStatus, nextPaymentPeriod, isFirstOfMonth, calculateProratedFee } from '@/lib/calculations'
 import { ROUTES } from '@/utils/constants'
 import { MemberHeader } from './_components/MemberHeader'
 import { FeeSection } from './_components/FeeSection'
@@ -130,7 +130,9 @@ export default async function MemberProfilePage({ params }) {
     evening: feeStructure?.evening_fee ?? 500,
     fulltime: feeStructure?.fulltime_fee ?? 900,
   }
-  const amountDue = currentAllocation
+
+  // i did here let in place of const
+  let amountDue = currentAllocation
     ? Number(shiftFeeMap[currentAllocation.shift] || 500)
     : null
 
@@ -144,13 +146,23 @@ export default async function MemberProfilePage({ params }) {
     currentPeriodStart = next.start
     currentPeriodEnd = next.end
   } else {
-  const today = new Date()
-  const start = new Date(today.getFullYear(), today.getMonth(), 1)
-  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-  // Use toDbDate — not toISOString() — to prevent UTC timezone shift
-  // toISOString() at midnight IST converts to previous day UTC
-  currentPeriodStart = toDbDate(start)
-  currentPeriodEnd = toDbDate(end)
+  
+  // No payment ever — show the correct prorated first period
+  // based on join_date, not today's date
+  if (isFirstOfMonth(member.join_date)) {
+    const [jy, jm] = member.join_date.split('-').map(Number)
+    currentPeriodStart = member.join_date
+    currentPeriodEnd   = toDbDate(new Date(jy, jm, 0))
+  } else {
+    // Member joined mid-month — prorate from join_date
+    // This matches exactly what pay/page.jsx computes as the default
+    const shiftFee = amountDue || 500
+    const prorated = calculateProratedFee(member.join_date, shiftFee)
+    currentPeriodStart = prorated.periodStart
+    currentPeriodEnd   = prorated.periodEnd
+    amountDue = prorated.amount
+
+  }
 }
 
   const feeInfo = {

@@ -14,6 +14,7 @@ const FILTERS = [
   { key: 'all',      label: 'All' },
   { key: 'overdue',  label: 'Overdue' },
   { key: 'grace',    label: 'Grace' },
+  { key: 'unpaid',   label: 'Unpaid'},
   { key: 'paid',     label: 'Paid' },
   { key: 'inactive', label: 'Inactive' },
 ]
@@ -76,7 +77,7 @@ export function MembersClient({ initialMembers, totalCount }) {
       // Default: show all non-inactive members
       result = result.filter((m) => m.status !== 'inactive')
     } else {
-      // paid, grace, overdue
+      // paid, grace, overdue, unpaid
       result = result.filter((m) =>
         m.status !== 'inactive' && m.fee_status === activeFilter
       )
@@ -92,10 +93,34 @@ export function MembersClient({ initialMembers, totalCount }) {
       all: active.length,
       overdue: active.filter((m) => m.fee_status === FEE_STATUS.OVERDUE).length,
       grace: active.filter((m) => m.fee_status === FEE_STATUS.GRACE).length,
+      unpaid: active.filter((m) => m.fee_status === FEE_STATUS.UNPAID).length,
       paid: active.filter((m) => m.fee_status === FEE_STATUS.PAID).length,
       inactive: initialMembers.filter((m) => m.status === 'inactive').length,
     }
   }, [initialMembers])
+
+  function emptyMessage() {
+    if (searchQuery)              return 'No members found'
+    if (activeFilter === 'inactive') return 'No inactive members'
+    if (activeFilter === 'overdue')  return 'No overdue members'
+    if (activeFilter === 'grace')    return 'No members in grace period'
+    if (activeFilter === 'unpaid')   return 'No unpaid members'
+    if (activeFilter === 'paid')     return 'No paid members'
+    return 'No members yet'
+  }
+
+  function emptyDescription() {
+    if (searchQuery)                return 'Try a different name or phone number'
+    if (activeFilter === 'overdue') return 'All members are up to date ✓'
+    if (activeFilter === 'unpaid')  return 'All active members have at least one payment'
+    if (activeFilter === 'all')     return 'Add your first member to get started'
+    return undefined
+  }
+
+  const isSuccessEmpty =
+    (activeFilter === 'overdue' || activeFilter === 'unpaid') &&
+    displayMembers.length === 0 &&
+    !searchQuery
 
   return (
     <>
@@ -108,6 +133,7 @@ export function MembersClient({ initialMembers, totalCount }) {
           {FILTERS.map(({ key, label }) => {
             const count = counts[key]
             const isActive = activeFilter === key
+            const isDanger = (key === 'overdue' || key === 'unpaid') && count > 0 && !isActive
 
             return (
               <button
@@ -120,10 +146,9 @@ export function MembersClient({ initialMembers, totalCount }) {
                               ? 'bg-gray-900 text-white'
                               : 'bg-white text-gray-600 border border-gray-200'
                             }
-                            ${key === 'overdue' && count > 0 && !isActive
+                            ${(key === 'overdue') && count > 0 && !isActive
                               ? 'border-red-200 text-red-600'
-                              : ''
-                            }`}
+                              : ''}`}
               >
                 {label}
                 {count > 0 && (
@@ -147,8 +172,8 @@ export function MembersClient({ initialMembers, totalCount }) {
 
       {/* Results count */}
       {searchQuery && (
-        <p className="px-4 py-2 text-xs text-gray-400">
-          {displayMembers.length} result{displayMembers.length !== 1 ? 's' : ''} for "{searchQuery}"
+        <p className="px-4 py-2 text-xs text-muted">
+          {displayMembers.length} result{displayMembers.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
         </p>
       )}
 
@@ -156,27 +181,9 @@ export function MembersClient({ initialMembers, totalCount }) {
       <div className="bg-white mx-0 mt-2 border-y border-gray-100">
         {displayMembers.length === 0 ? (
           <EmptyState
-            message={
-              searchQuery
-                ? 'No members found'
-                : activeFilter === 'inactive'
-                  ? 'No inactive members'
-                  : activeFilter === 'overdue'
-                    ? 'No overdue members'
-                    : activeFilter === 'grace'
-                      ? 'No members in grace period'
-                      : 'No members yet'
-            }
-            description={
-              searchQuery
-                ? 'Try a different name or phone number'
-                : activeFilter === 'overdue'
-                  ? 'All members are up to date ✓'
-                  : activeFilter === 'all'
-                    ? 'Add your first member to get started'
-                    : undefined
-            }
-            success={activeFilter === 'overdue' && displayMembers.length === 0 && !searchQuery}
+            message={emptyMessage()}
+            description={emptyDescription()}
+            success={isSuccessEmpty}
             action={
               !searchQuery && activeFilter === 'all' && displayMembers.length === 0
                 ? { label: 'Add first member', onClick: () => router.push(ROUTES.MEMBER_NEW) }

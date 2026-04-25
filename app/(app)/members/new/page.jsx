@@ -28,33 +28,33 @@ export default async function NewMemberPage() {
 
   const libraryId = partnerData.library_id
 
-  // Fetch fee structure
-  const { data: fees, error: feesError } = await supabase
-    .from('fee_structures')
-    .select('morning_fee, evening_fee, fulltime_fee, valid_from')
-    .eq('library_id', libraryId)
-    .is('valid_until', null)
-    .maybeSingle()
+  // Both independent — run in parallel
+  const [
+    { data: fees,     error: feesError  },
+    { data: rawSeats, error: seatsError },
+  ] = await Promise.all([
+    supabase
+      .from('fee_structures')
+      .select('morning_fee, evening_fee, fulltime_fee, valid_from')
+      .eq('library_id', libraryId)
+      .is('valid_until', null)
+      .maybeSingle(),
+
+    supabase
+      .from('seats')
+      .select(`
+        id, seat_number, row_label,
+        seat_allocations(id, shift, member_id, is_active, members(name))
+      `)
+      .eq('library_id', libraryId)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('seat_number', { ascending: true }),
+  ])
 
   if (feesError) {
     return <ErrorState message="Could not load fee structure. Please try again." />
   }
-
-  // Fetch all active seats with current occupancy
-  // This guarantees SeatPickerStep always has data even if /seats was never visited
-  const { data: rawSeats, error: seatsError } = await supabase
-    .from('seats')
-    .select(`
-      id, seat_number, row_label,
-      seat_allocations(
-        id, shift, member_id, is_active,
-        members(name)
-      )
-    `)
-    .eq('library_id', libraryId)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .order('seat_number', { ascending: true })
 
   if (seatsError) {
     return <ErrorState message="Could not load seat data. Please try again." />

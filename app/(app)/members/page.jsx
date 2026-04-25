@@ -29,43 +29,44 @@ export default async function MembersPage() {
   const libraryId = partnerData.library_id
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
 
-  // Query 1 — all members for this library (including inactive — filtered client-side)
-  const { data: rawMembers, error: membersError } = await supabase
-    .from('members')
-    .select('id, name, phone, address, photo_url, join_date, status, notes')
-    .eq('library_id', libraryId)
-    .is('deleted_at', null)
-    .order('name', { ascending: true })
+  // Run all three independent queries in parallel
+  const [
+    { data: rawMembers,     error: membersError },
+    { data: rawAllocations, error: allocError   },
+    { data: rawPayments,    error: paymentsError },
+  ] = await Promise.all([
+    supabase
+      .from('members')
+      .select('id, name, phone, address, photo_url, join_date, status, notes')
+      .eq('library_id', libraryId)
+      .is('deleted_at', null)
+      .order('name', { ascending: true }),
+
+    supabase
+      .from('seat_allocations')
+      .select('id, member_id, shift, seats(seat_number)')
+      .eq('library_id', libraryId)
+      .eq('is_active', true)
+      .is('deleted_at', null),
+
+    supabase
+      .from('fee_payments')
+      .select('member_id, period_end_date, period_start_date')
+      .eq('library_id', libraryId)
+      .is('deleted_at', null)
+      .order('period_end_date', { ascending: false }),
+  ])
 
   if (membersError) {
-    console.error('[MembersPage] members query failed:', membersError.message)
+    console.error('[MembersPage] members:', membersError.message)
     return <ErrorState message="Could not load members. Please try again." />
   }
-
-  // Query 2 — all active seat allocations with seat numbers
-  const { data: rawAllocations, error: allocError } = await supabase
-    .from('seat_allocations')
-    .select('id, member_id, shift, seats(seat_number)')
-    .eq('library_id', libraryId)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-
   if (allocError) {
-    console.error('[MembersPage] allocations query failed:', allocError.message)
+    console.error('[MembersPage] allocations:', allocError.message)
     return <ErrorState message="Could not load seat data. Please try again." />
   }
-
-  // Query 3 — latest fee payment per member
-  // Fetch all payments ordered by period_end_date desc, keep first per member
-  const { data: rawPayments, error: paymentsError } = await supabase
-    .from('fee_payments')
-    .select('member_id, period_end_date, period_start_date')
-    .eq('library_id', libraryId)
-    .is('deleted_at', null)
-    .order('period_end_date', { ascending: false })
-
   if (paymentsError) {
-    console.error('[MembersPage] payments query failed:', paymentsError.message)
+    console.error('[MembersPage] payments:', paymentsError.message)
     return <ErrorState message="Could not load payment data. Please try again." />
   }
 

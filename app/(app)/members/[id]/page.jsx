@@ -35,29 +35,63 @@ export default async function MemberProfilePage({ params }) {
   const libraryId = partnerData.library_id
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
 
-  // Query 1 — member details
-  // RLS ensures library_id scoping automatically
-  const { data: member, error: memberError } = await supabase
-    .from('members')
-    .select('id, name, phone, address, aadhar_last4, photo_url, join_date, status, notes')
-    .eq('id', id)
-    .eq('library_id', libraryId)
-    .is('deleted_at', null)
-    .single()
+   // All five queries run in parallel — none depend on each other
+  const [
+    { data: member,      error: memberError      },
+    { data: rawCurrentAlloc                       },
+    { data: rawPayments                           },
+    { data: rawAllocations                        },
+    { data: feeStructure                          },
+  ] = await Promise.all([
+    supabase
+      .from('members')
+      .select('id, name, phone, address, aadhar_last4, photo_url, join_date, status, notes')
+      .eq('id', id)
+      .eq('library_id', libraryId)
+      .is('deleted_at', null)
+      .single(),
+
+    supabase
+      .from('seat_allocations')
+      .select('id, shift, start_date, seats(seat_number, id)')
+      .eq('member_id', id)
+      .eq('library_id', libraryId)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .maybeSingle(),
+
+    supabase
+      .from('fee_payments')
+      .select(`
+        id, amount_paid, is_prorated, days_covered,
+        period_start_date, period_end_date,
+        paid_on, payment_mode, notes,
+        partners(name)
+      `)
+      .eq('member_id', id)
+      .eq('library_id', libraryId)
+      .is('deleted_at', null)
+      .order('period_end_date', { ascending: false }),
+
+    supabase
+      .from('seat_allocations')
+      .select('id, shift, start_date, end_date, is_active, seats(seat_number)')
+      .eq('member_id', id)
+      .eq('library_id', libraryId)
+      .is('deleted_at', null)
+      .order('start_date', { ascending: false }),
+
+    supabase
+      .from('fee_structures')
+      .select('morning_fee, evening_fee, fulltime_fee')
+      .eq('library_id', libraryId)
+      .is('valid_until', null)
+      .maybeSingle(),
+  ])
 
   if (memberError || !member) {
     notFound()
   }
-
-  // Query 2 — current active allocation with seat number
-  const { data: rawCurrentAlloc } = await supabase
-    .from('seat_allocations')
-    .select('id, shift, start_date, seats(seat_number, id)')
-    .eq('member_id', member.id)
-    .eq('library_id', libraryId)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .maybeSingle()
 
   const currentAllocation = rawCurrentAlloc ? {
     id: rawCurrentAlloc.id,
@@ -66,20 +100,6 @@ export default async function MemberProfilePage({ params }) {
     seat_number: rawCurrentAlloc.seats?.seat_number ?? null,
     seat_id: rawCurrentAlloc.seats?.id ?? null,
   } : null
-
-  // Query 3 — all payment history, newest first
-  const { data: rawPayments } = await supabase
-    .from('fee_payments')
-    .select(`
-      id, amount_paid, is_prorated, days_covered,
-      period_start_date, period_end_date,
-      paid_on, payment_mode, notes,
-      partners(name)
-    `)
-    .eq('member_id', member.id)
-    .eq('library_id', libraryId)
-    .is('deleted_at', null)
-    .order('period_end_date', { ascending: false })
 
   const payments = (rawPayments || []).map((p) => ({
     id: p.id,
@@ -94,15 +114,6 @@ export default async function MemberProfilePage({ params }) {
     collected_by_partner_name: p.partners?.name ?? 'Unknown',
   }))
 
-  // Query 4 — all allocation history, newest first
-  const { data: rawAllocations } = await supabase
-    .from('seat_allocations')
-    .select('id, shift, start_date, end_date, is_active, seats(seat_number)')
-    .eq('member_id', member.id)
-    .eq('library_id', libraryId)
-    .is('deleted_at', null)
-    .order('start_date', { ascending: false })
-
   const allocations = (rawAllocations || []).map((a) => ({
     id: a.id,
     shift: a.shift,
@@ -111,14 +122,6 @@ export default async function MemberProfilePage({ params }) {
     is_active: a.is_active,
     seat_number: a.seats?.seat_number ?? null,
   }))
-
-  // Query 5 — current fee structure (for amount due calculation)
-  const { data: feeStructure } = await supabase
-    .from('fee_structures')
-    .select('morning_fee, evening_fee, fulltime_fee')
-    .eq('library_id', libraryId)
-    .is('valid_until', null)
-    .maybeSingle()
 
   // Compute fee info for FeeSection
   const lastPayment = payments.length > 0 ? payments[0] : null

@@ -56,43 +56,47 @@ export default async function PayPage({ params }) {
     redirect(ROUTES.MEMBER_PROFILE(id))
   }
 
-  // Active allocation — tells us their shift
-  const { data: allocation } = await supabase
-    .from('seat_allocations')
-    .select('shift, seats(seat_number)')
-    .eq('member_id', id)
-    .eq('library_id', libraryId)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .maybeSingle()
+  // These four queries are all independent — run in parallel
+  const [
+    { data: allocation      },
+    { data: fees            },
+    { data: lastPaymentRaw  },
+    { data: allPartners, error: partnersError },
+  ] = await Promise.all([
+    supabase
+      .from('seat_allocations')
+      .select('shift, seats(seat_number)')
+      .eq('member_id', id)
+      .eq('library_id', libraryId)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .maybeSingle(),
 
-  // Current fee structure
-  const { data: fees } = await supabase
-    .from('fee_structures')
-    .select('morning_fee, evening_fee, fulltime_fee')
-    .eq('library_id', libraryId)
-    .is('valid_until', null)
-    .maybeSingle()
+    supabase
+      .from('fee_structures')
+      .select('morning_fee, evening_fee, fulltime_fee')
+      .eq('library_id', libraryId)
+      .is('valid_until', null)
+      .maybeSingle(),
 
-  // Most recent payment — determines whether this is first payment or renewal
-  const { data: lastPaymentRaw } = await supabase
-    .from('fee_payments')
-    .select('period_end_date, amount_paid, is_prorated')
-    .eq('member_id', id)
-    .eq('library_id', libraryId)
-    .is('deleted_at', null)
-    .order('period_end_date', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    supabase
+      .from('fee_payments')
+      .select('period_end_date, amount_paid, is_prorated')
+      .eq('member_id', id)
+      .eq('library_id', libraryId)
+      .is('deleted_at', null)
+      .order('period_end_date', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
 
-  // All active partners for collected-by selector
-  const { data: allPartners, error: partnersError } = await supabase
-    .from('partners')
-    .select('id, name, role')
-    .eq('library_id', libraryId)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .order('role', { ascending: false })
+    supabase
+      .from('partners')
+      .select('id, name, role')
+      .eq('library_id', libraryId)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('role', { ascending: false }),
+  ])
 
   if (partnersError) {
     return <ErrorState message="Could not load partner data." />

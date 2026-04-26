@@ -5,22 +5,14 @@ import { createClient }   from '@/lib/supabase/server'
 import { ROUTES }         from '@/utils/constants'
 import { PaymentsClient } from './_components/PaymentsClient'
 import { ErrorState }     from '@/components/ui/ErrorState'
+import { getPartnerData } from '@/lib/getPartnerData'
 
 export default async function PaymentsPage() {
   const supabase = await createClient()
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) redirect(ROUTES.LOGIN)
+  const partnerData = await getPartnerData()
 
-  const { data: partnerData, error: partnerError } = await supabase
-    .from('partners')
-    .select('library_id')
-    .eq('auth_user_id', user.id)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .single()
-
-  if (partnerError || !partnerData) redirect(ROUTES.LOGIN)
+  if (!partnerData) redirect(ROUTES.LOGIN)
 
   const libraryId = partnerData.library_id
 

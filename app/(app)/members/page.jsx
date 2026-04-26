@@ -6,23 +6,14 @@ import { computeFeeStatus } from '@/lib/calculations'
 import { ROUTES } from '@/utils/constants'
 import { MembersClient } from './_components/MembersClient'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { getPartnerData } from '@/lib/getPartnerData'
 
 export default async function MembersPage() {
   const supabase = await createClient()
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) redirect(ROUTES.LOGIN)
+  const partnerData = await getPartnerData()
 
-  // Get partner context — library_id and grace period days
-  const { data: partnerData, error: partnerError } = await supabase
-    .from('partners')
-    .select('library_id, libraries(grace_period_days)')
-    .eq('auth_user_id', user.id)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .single()
-
-  if (partnerError || !partnerData) {
+  if (!partnerData) {
     return <ErrorState message="Could not load library data." />
   }
 

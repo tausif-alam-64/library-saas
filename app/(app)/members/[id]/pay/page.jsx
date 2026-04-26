@@ -10,6 +10,7 @@ import {
 import { ROUTES, ROLES } from '@/utils/constants'
 import { PaymentForm }   from './_components/PaymentForm'
 import { ErrorState }    from '@/components/ui/ErrorState'
+import { getPartnerData } from '@/lib/getPartnerData'
 
 function localDateStr(date) {
   const y = date.getFullYear()
@@ -22,18 +23,9 @@ export default async function PayPage({ params }) {
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) redirect(ROUTES.LOGIN)
+  const partnerData = await getPartnerData()
 
-  const { data: partnerData, error: partnerError } = await supabase
-    .from('partners')
-    .select('id, role, library_id, libraries(grace_period_days)')
-    .eq('auth_user_id', user.id)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .single()
-
-  if (partnerError || !partnerData) redirect(ROUTES.LOGIN)
+  if (!partnerData) redirect(ROUTES.LOGIN)
 
   if (partnerData.role !== ROLES.PRIMARY) {
     redirect(ROUTES.MEMBER_PROFILE(id))

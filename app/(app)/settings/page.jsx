@@ -6,22 +6,13 @@ import { ROUTES, ROLES } from '@/utils/constants'
 import { LibrarySettingsForm } from './_components/LibrarySettingsForm'
 import { ErrorState } from '@/components/ui/ErrorState'
 import Link from 'next/link'
+import { getPartnerData } from '@/lib/getPartnerData'
 
 export default async function SettingsPage() {
-  const supabase = await createClient()
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) redirect(ROUTES.LOGIN)
+  const partnerData = await getPartnerData()
 
-  const { data: partnerData, error: partnerError } = await supabase
-    .from('partners')
-    .select('id, name, role, library_id, libraries(*)')
-    .eq('auth_user_id', user.id)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .single()
-
-  if (partnerError || !partnerData) redirect(ROUTES.LOGIN)
+  if (!partnerData) redirect(ROUTES.LOGIN)
 
   const isPrimary = partnerData.role === ROLES.PRIMARY
   const library   = partnerData.libraries

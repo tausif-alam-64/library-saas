@@ -10,6 +10,7 @@ import { OverdueList }    from './_components/OverdueList'
 import { ExpiringList }   from './_components/ExpiringList'
 import { RecentActivity } from './_components/RecentActivity'
 import { ErrorState }     from '@/components/ui/ErrorState'
+import { getPartnerData } from '@/lib/getPartnerData'
 
 function localDateStr(date) {
   const y = date.getFullYear()
@@ -39,21 +40,9 @@ function buildActivityDescription(action, newData) {
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) redirect(ROUTES.LOGIN)
-  const start = performance.now()
-  const { data: partnerData, error: partnerError } = await supabase
-    .from('partners')
-    .select(`
-      id, name, role, library_id,
-      libraries ( id, name, grace_period_days, no_show_days )
-    `)
-    .eq('auth_user_id', user.id)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .single()
+  const partnerData = await getPartnerData()
 
-  if (partnerError || !partnerData) redirect(ROUTES.LOGIN)
+  if (!partnerData) redirect(ROUTES.LOGIN)
 
   const libraryId       = partnerData.library_id
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
@@ -116,7 +105,7 @@ export default async function DashboardPage() {
       .order('created_at', { ascending: false })
       .limit(5),
   ])
-  console.log(performance.now() -start)
+  
 
   if (membersError) {
     console.error('[DashboardPage] members:', membersError.message)

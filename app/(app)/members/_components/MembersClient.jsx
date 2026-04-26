@@ -143,22 +143,21 @@ export function MembersClient({ initialMembers, totalCount }) {
                             text-xs font-medium whitespace-nowrap
                             transition-colors touch-manipulation shrink-0
                             ${isActive
-                              ? 'bg-gray-900 text-white'
-                              : 'bg-white text-gray-600 border border-gray-200'
-                            }
-                            ${(key === 'overdue') && count > 0 && !isActive
-                              ? 'border-red-200 text-red-600'
-                              : ''}`}
+                              ? 'bg-primary text-white'
+                              : isDanger
+                                ? 'bg-surface text-danger border border-red-200'
+                                : 'bg-surface text-gray-600 border border-gray-200'
+                            }`}
               >
                 {label}
                 {count > 0 && (
                   <span className={`text-[10px] font-bold
-                                    ${isActive
-                                      ? 'text-gray-300'
-                                      : key === 'overdue' && count > 0
-                                        ? 'text-red-500'
-                                        : 'text-gray-400'
-                                    }`}>
+                    ${isActive
+                      ? 'text-gray-300'
+                      : isDanger
+                        ? 'text-danger'
+                        : 'text-muted'
+                    }`}>
                     {count}
                   </span>
                 )}

@@ -7,6 +7,7 @@ import { LibrarySettingsForm } from './_components/LibrarySettingsForm'
 import { ErrorState } from '@/components/ui/ErrorState'
 import Link from 'next/link'
 import { getPartnerData } from '@/lib/getPartnerData'
+import { LogoutButton } from '@/components/layout/LogoutButton'
 
 export default async function SettingsPage() {
 
@@ -118,6 +119,9 @@ export default async function SettingsPage() {
       {/* Library settings form — primary only editable */}
       <div className="mt-2">
         <LibrarySettingsForm library={library} isPrimary={isPrimary} />
+      </div>
+      <div className="mt-2 bg-white border-y border-gray-100">
+         <LogoutButton />
       </div>
     </div>
   )

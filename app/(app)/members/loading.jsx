@@ -18,7 +18,7 @@ export default function MembersLoading() {
       </div>
 
       {/* Member card skeletons */}
-      <div className="bg-white mt-2 border-y border-gray-100 divide-y divide-gray-50">
+      <div className="bg-white mt-14 border-y border-gray-100 divide-y divide-gray-50">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-4 py-3.5">
             <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse shrink-0"

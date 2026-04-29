@@ -115,7 +115,7 @@ export default async function MemberProfilePage({ params }) {
 
   // Compute fee info for FeeSection
   const lastPayment = payments.length > 0 ? payments[0] : null
-  const feeComputed = computeFeeStatus(lastPayment, gracePeriodDays)
+  let feeComputed = computeFeeStatus(lastPayment, gracePeriodDays)
 
   // Current amount due based on their shift
   const shiftFeeMap = {
@@ -136,8 +136,42 @@ export default async function MemberProfilePage({ params }) {
 
   if (lastPayment) {
     const next = nextPaymentPeriod(lastPayment.period_end_date)
+
+  // Returning member detection:
+  // If the computed next period starts BEFORE the current month,
+  // the member was inactive for one or more months.
+  // They do not owe for the months they were gone — they were not a member.
+  // Treat them as starting fresh: collect for the current month only.
+  const today              = new Date()
+  const firstOfThisMonth   = toDbDate(new Date(today.getFullYear(), today.getMonth(), 1))
+  
+
+  if (next.start < firstOfThisMonth) {
+    // Returning member — last payment was more than one month ago
+  // Use TODAY as period start (their reactivation date), not the 1st of the month
+  // This matches what pay/page.jsx will compute as the default period
+  const todayStr = toDbDate(today)
+
+  if (isFirstOfMonth(todayStr)) {
+    // Rejoined exactly on the 1st — full month, no proration needed
+    currentPeriodStart = firstOfThisMonth
+    currentPeriodEnd   = toDbDate(new Date(today.getFullYear(), today.getMonth() + 1, 0))
+    // amountDue stays as the full monthly fee
+  } else {
+    // Rejoined mid-month — prorate from today to end of month
+    const shiftFee = amountDue || 500
+    const prorated = calculateProratedFee(todayStr, shiftFee)
+    currentPeriodStart = prorated.periodStart  // = todayStr
+    currentPeriodEnd   = prorated.periodEnd
+    amountDue          = prorated.amount       // prorated amount shown on profile
+  }
+
+  feeComputed = { status: 'unpaid', daysOverdue: 0, daysLeft: 0 }
+  } else {
+    // Normal case — active member whose last payment was recent
     currentPeriodStart = next.start
-    currentPeriodEnd = next.end
+    currentPeriodEnd   = next.end
+  }
   } else {
   
   // No payment ever — show the correct prorated first period

@@ -1,13 +1,11 @@
 // app/api/members/[id]/status/route.js
 
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse }  from 'next/server'
+import { createClient }  from '@/lib/supabase/server'
 import { getPartner, requirePrimary } from '@/lib/auth'
 import { writeAuditLog } from '@/lib/audit'
-import { ERROR_CODES } from '@/utils/constants'
+import { ERROR_CODES }   from '@/utils/constants'
 
-// Local date string helper — never use toISOString() for date-only values
-// toISOString() converts to UTC which shifts dates back 1 day for IST users
 function localDateString() {
   const d = new Date()
   const y = d.getFullYear()
@@ -17,7 +15,7 @@ function localDateString() {
 }
 
 export async function PATCH(request, { params }) {
-  const { id } = await params
+  const { id }   = await params
   const supabase = await createClient()
 
   const { partner, error: authError } = await getPartner(supabase)
@@ -48,12 +46,13 @@ export async function PATCH(request, { params }) {
 
   const { status, reason } = body
 
-  if (status !== 'inactive') {
+  // Only two valid status transitions
+  if (status !== 'inactive' && status !== 'active') {
     return NextResponse.json(
       {
-        error: ERROR_CODES.VALIDATION_ERROR,
-        message: 'Only inactive is a valid status change',
-        field: 'status',
+        error:   ERROR_CODES.VALIDATION_ERROR,
+        message: 'Status must be either inactive or active',
+        field:   'status',
       },
       { status: 400 }
     )
@@ -75,64 +74,102 @@ export async function PATCH(request, { params }) {
       )
     }
 
-    if (member.status === 'inactive') {
+    // Prevent no-op status changes
+    if (member.status === status) {
       return NextResponse.json(
-        { error: ERROR_CODES.VALIDATION_ERROR, message: 'Member is already inactive' },
+        {
+          error:   ERROR_CODES.VALIDATION_ERROR,
+          message: `Member is already ${status}`,
+        },
         { status: 400 }
       )
     }
 
-    const nowIso  = new Date().toISOString() // used only for updated_at timestamp
-    const today   = localDateString()         // used for date-only columns
+    const nowIso = new Date().toISOString()
+    const today  = localDateString()
 
-    // Step 1 — update member status
-    const { data: updatedMember, error: updateError } = await supabase
-      .from('members')
-      .update({ status: 'inactive', updated_at: nowIso })
-      .eq('id', id)
-      .select('id, name, status')
-      .single()
+    // ── MARK INACTIVE ────────────────────────────────────────────────
+    if (status === 'inactive') {
+      const { data: updatedMember, error: updateError } = await supabase
+        .from('members')
+        .update({ status: 'inactive', updated_at: nowIso })
+        .eq('id', id)
+        .select('id, name, status')
+        .single()
 
-    if (updateError) throw updateError
+      if (updateError) throw updateError
 
-    // Step 2 — end all active allocations
-    const { data: freedAllocations } = await supabase
-      .from('seat_allocations')
-      .update({
-        is_active:   false,
-        end_date:    today,
-        updated_at:  nowIso,
+      // End all active allocations — seat is freed immediately
+      const { data: freedAllocations } = await supabase
+        .from('seat_allocations')
+        .update({ is_active: false, end_date: today, updated_at: nowIso })
+        .eq('member_id', id)
+        .eq('library_id', partner.library_id)
+        .eq('is_active', true)
+        .select('seat_id, shift')
+
+      // Log status change
+      await supabase.from('member_status_logs').insert({
+        library_id:            partner.library_id,
+        member_id:             id,
+        old_status:            member.status,
+        new_status:            'inactive',
+        changed_by_partner_id: partner.id,
+        reason:                reason || 'Marked inactive by partner',
       })
-      .eq('member_id', id)
-      .eq('library_id', partner.library_id)
-      .eq('is_active', true)
-      .select('seat_id, shift')
 
-    // Step 3 — write to member_status_logs
-    await supabase.from('member_status_logs').insert({
-      library_id:              partner.library_id,
-      member_id:               id,
-      old_status:              member.status,
-      new_status:              'inactive',
-      changed_by_partner_id:   partner.id,
-      reason:                  reason || '7 days no show',
-    })
+      await writeAuditLog(supabase, {
+        library_id:  partner.library_id,
+        partner_id:  partner.id,
+        action:      'mark_member_inactive',
+        entity_type: 'member',
+        entity_id:   id,
+        old_data:    { status: member.status },
+        new_data:    { status: 'inactive', reason: reason || null },
+      })
 
-    // Step 4 — audit log
-    await writeAuditLog(supabase, {
-      library_id:  partner.library_id,
-      partner_id:  partner.id,
-      action:      'mark_member_inactive',
-      entity_type: 'member',
-      entity_id:   id,
-      old_data:    { status: member.status },
-      new_data:    { status: 'inactive', reason: reason || null },
-    })
+      return NextResponse.json({
+        member:            updatedMember,
+        freed_allocations: freedAllocations || [],
+      })
+    }
 
-    return NextResponse.json({
-      member:             updatedMember,
-      freed_allocations:  freedAllocations || [],
-    })
+    // ── REACTIVATE ───────────────────────────────────────────────────
+    if (status === 'active') {
+      // Reactivation sets status back to active
+      // No seat is auto-assigned — librarian uses "Assign new seat" after reactivation
+      // The member keeps their full payment history and allocation history
+      const { data: updatedMember, error: updateError } = await supabase
+        .from('members')
+        .update({ status: 'active', updated_at: nowIso })
+        .eq('id', id)
+        .select('id, name, status')
+        .single()
+
+      if (updateError) throw updateError
+
+      // Log status change
+      await supabase.from('member_status_logs').insert({
+        library_id:            partner.library_id,
+        member_id:             id,
+        old_status:            member.status,
+        new_status:            'active',
+        changed_by_partner_id: partner.id,
+        reason:                reason || 'Reactivated by partner',
+      })
+
+      await writeAuditLog(supabase, {
+        library_id:  partner.library_id,
+        partner_id:  partner.id,
+        action:      'reactivate_member',
+        entity_type: 'member',
+        entity_id:   id,
+        old_data:    { status: member.status },
+        new_data:    { status: 'active' },
+      })
+
+      return NextResponse.json({ member: updatedMember })
+    }
 
   } catch (error) {
     console.error('[PATCH /api/members/[id]/status]', error)

@@ -26,6 +26,7 @@ function buildActivityDescription(action, newData) {
       case 'create_member':        return `${data?.name || 'Member'} was added`
       case 'record_payment':       return `₹${data?.amount_paid || ''} recorded`
       case 'mark_member_inactive': return `Member marked inactive`
+      case 'reactivate_member':    return `Member reactivated`
       case 'end_allocation':       return `Seat allocation ended`
       case 'assign_seat':          return `Seat assigned`
       case 'update_member':        return `Member details updated`
@@ -99,7 +100,7 @@ export default async function DashboardPage() {
       .select(`id, action, new_data, created_at, partners(name)`)
       .eq('library_id', libraryId)
       .in('action', [
-        'create_member', 'record_payment', 'mark_member_inactive',
+        'create_member', 'record_payment', 'mark_member_inactive','reactivate_member',
         'end_allocation', 'assign_seat', 'update_member', 'delete_member',
       ])
       .order('created_at', { ascending: false })

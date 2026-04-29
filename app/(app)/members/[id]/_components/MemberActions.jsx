@@ -186,6 +186,41 @@ export function MemberActions({ member, currentAllocation }) {
     })
   }
 
+function handleReactivate() {
+  closeSheet()
+  showConfirm({
+    message:     `Reactivate ${member.name}?`,
+    description: 'They will return to active status with no seat assigned. You can assign a seat after reactivation.',
+    danger:      false,
+    onConfirm:   async () => {
+      try {
+        const res = await fetch(`/api/members/${member.id}/status`, {
+          method:  'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            status: 'active',
+            reason: 'Rejoined library',
+          }),
+        })
+
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(err.message || 'Failed to reactivate member')
+        }
+
+        addToast(`${member.name} reactivated`, 'success')
+        // Refresh so the profile shows active status
+        // and the "Assign new seat" button appears
+        router.refresh()
+
+      } catch (err) {
+        console.error('[MemberActions] reactivate error:', err)
+        addToast(err.message || 'Failed to reactivate member', 'error')
+      }
+    },
+  })
+}
+
   return (
     <RoleGuard>
       {/* Three-dots trigger */}
@@ -298,6 +333,25 @@ export function MemberActions({ member, currentAllocation }) {
                   </svg>
                 </div>
                 <span className="text-sm font-medium text-danger">Mark as inactive</span>
+              </button>
+            )}
+
+            {/* Reactivate — only for inactive members */}
+            {member.status === 'inactive' && (
+              <button
+                onClick={handleReactivate}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl
+                           bg-green-50 active:bg-green-100 touch-manipulation"
+              >
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center
+                                justify-center shrink-0">
+                  <svg className="w-4 h-4 text-success" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                      strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-success">Reactivate member</span>
               </button>
             )}
 

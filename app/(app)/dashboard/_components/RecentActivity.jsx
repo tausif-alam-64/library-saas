@@ -19,6 +19,11 @@ const ACTION_ICONS = {
     <path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
       stroke="#dc2626" strokeWidth="2" strokeLinecap="round"/>
   )},
+  reactivate_member: { bg: 'bg-green-100', icon: (
+  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    stroke="#15803d" strokeWidth="2" strokeLinecap="round"
+    strokeLinejoin="round"/>
+)},
   end_allocation: { bg: 'bg-amber-100', icon: (
     <><path d="M20 9V6a2 2 0 00-2-2H6a2 2 0 00-2 2v3"
         stroke="#d97706" strokeWidth="2"/>

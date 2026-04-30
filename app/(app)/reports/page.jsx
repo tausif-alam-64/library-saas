@@ -63,7 +63,6 @@ export default async function ReportsPage({ searchParams }) {
       .from('members')
       .select('id, name, status')
       .eq('library_id', libraryId)
-      .neq('status', 'inactive')
       .is('deleted_at', null),
 
     supabase
@@ -133,8 +132,13 @@ export default async function ReportsPage({ searchParams }) {
       seat_number: a.seats?.seat_number ?? null,
     }
   })
-
-  const membersData = (rawMembers || []).map((m) => {
+   
+  // Build lookup map from ALL members (including inactive — needed for payment name resolution)
+  const memberLookup = {}
+  ;(rawMembers || []).forEach((m) => { memberLookup[m.id] = m })
+  
+  // Only compute fee status for active members
+  const membersData = (rawMembers || []).filter((m) => m.status !== 'inactive').map((m) => {
     const latestPayment = latestPaymentByMember[m.id] || null
     const alloc         = allocByMember[m.id] || null
     const feeResult     = computeFeeStatus(latestPayment, gracePeriodDays)
@@ -153,10 +157,10 @@ export default async function ReportsPage({ searchParams }) {
     }
   })
 
-  // All payment rows this month (not one per member)
+  // All payment rows this month (not one per member) (includes inactive)
   const paidPayments = monthPayments
     .map((p) => {
-      const member = (rawMembers || []).find((m) => m.id === p.member_id)
+      const member = memberLookup[p.member_id]
       const alloc  = allocByMember[p.member_id] || null
       return {
         id:                        p.id,

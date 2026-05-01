@@ -11,13 +11,9 @@ import { ExpiringList }   from './_components/ExpiringList'
 import { RecentActivity } from './_components/RecentActivity'
 import { ErrorState }     from '@/components/ui/ErrorState'
 import { getPartnerData } from '@/lib/getPartnerData'
+import { getISTDateStr, getISTMonthBounds } from '@/utils/formatters'
 
-function localDateStr(date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
+
 
 function buildActivityDescription(action, newData) {
   try {
@@ -48,15 +44,12 @@ export default async function DashboardPage() {
   const libraryId       = partnerData.library_id
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
 
-  const now           = new Date()
-  const monthStart    = new Date(now.getFullYear(), now.getMonth(), 1)
-  const monthEnd      = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const monthStartStr = localDateStr(monthStart)
-  const monthEndStr   = localDateStr(monthEnd)
-  const todayStr      = localDateStr(now)
-  const sevenDays     = new Date(now)
-  sevenDays.setDate(sevenDays.getDate() + 7)
-  const sevenDaysStr  = localDateStr(sevenDays)
+  const now             = new Date()
+  const todayStr        = getISTDateStr(now)
+  const { start: monthStartStr, end: monthEndStr } = getISTMonthBounds(now)
+
+  const sevenDaysLater  = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const sevenDaysStr    = getISTDateStr(sevenDaysLater)
 
   // All five queries run simultaneously — none depend on each other
   // No exact fee amount needed that's why fee structure query removed

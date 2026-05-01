@@ -104,3 +104,29 @@ export function toDbDate(date) {
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
 }
+
+// Used by every server page that needs the current date in IST
+// Vercel runs UTC — calling new Date() returns UTC midnight on IST boundaries
+export function getISTDateStr(date) {
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const istDate = new Date(date.getTime() + IST_OFFSET_MS)
+  const y = istDate.getUTCFullYear()
+  const m = String(istDate.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(istDate.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+export function getISTMonthBounds(date) {
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const istDate = new Date(date.getTime() + IST_OFFSET_MS)
+  const y = istDate.getUTCFullYear()
+  const m = istDate.getUTCMonth() // 0-indexed
+
+  const firstDay = new Date(y, m, 1)
+  const lastDay  = new Date(y, m + 1, 0)
+
+  return {
+    start: getISTDateStr(firstDay),
+    end:   getISTDateStr(lastDay),
+  }
+}

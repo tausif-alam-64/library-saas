@@ -32,24 +32,25 @@ export default async function ReportsPage({ searchParams }) {
   const libraryName     = partnerData.libraries?.name || 'Library'
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
 
-  const now         = new Date()
+  const now           = new Date()
+  const currentMonthIST = istNow.getUTCMonth() + 1
+  const istNow        = new Date(now.getTime() + (5.5 * 60 * 60 * 1000))
+  const currentYearIST  = istNow.getUTCFullYear()
+  
+  const reqMonth       = parseInt(resolvedParams?.month) || currentMonthIST
   const resolvedParams = await searchParams
-  const reqMonth    = parseInt(resolvedParams?.month) || now.getMonth() + 1
-  const reqYear     = parseInt(resolvedParams?.year)  || now.getFullYear()
+  const reqYear        = parseInt(resolvedParams?.year)  || currentYearIST
+  
+  const isInFuture = reqYear > currentYearIST ||
+     (reqYear === currentYearIST && reqMonth > currentMonthIST)
 
-  const currentMonth = now.getMonth() + 1
-  const currentYear  = now.getFullYear()
-  const isInFuture   =
-    reqYear > currentYear ||
-    (reqYear === currentYear && reqMonth > currentMonth)
-
-  const month = isInFuture ? currentMonth : reqMonth
-  const year  = isInFuture ? currentYear  : reqYear
+  const year  = isInFuture ? currentYearIST  : reqYear
+  const month = isInFuture ? currentMonthIST : reqMonth
 
   const monthStart    = new Date(year, month - 1, 1)
+  const monthStartStr = getISTDateStr(monthStart)
   const monthEnd      = new Date(year, month, 0)
-  const monthStartStr = localDateStr(monthStart)
-  const monthEndStr   = localDateStr(monthEnd)
+  const monthEndStr   = getISTDateStr(monthEnd)
 
   // All five queries run in parallel
   const [

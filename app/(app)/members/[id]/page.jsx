@@ -9,7 +9,7 @@ import { FeeSection } from './_components/FeeSection'
 import { PaymentHistory } from './_components/PaymentHistory'
 import { AllocationHistory } from './_components/AllocationHistory'
 import { MemberActions } from './_components/MemberActions'
-import { toDbDate } from '@/utils/formatters'
+import { getISTDateStr, toDbDate } from '@/utils/formatters'
 import { getPartnerData } from '@/lib/getPartnerData'
 
 export default async function MemberProfilePage({ params }) {
@@ -143,8 +143,11 @@ export default async function MemberProfilePage({ params }) {
   // They do not owe for the months they were gone — they were not a member.
   // Treat them as starting fresh: collect for the current month only.
   const today              = new Date()
-  const firstOfThisMonth   = toDbDate(new Date(today.getFullYear(), today.getMonth(), 1))
-  
+  const firstOfThisMonth = getISTDateStr(new Date(
+    new Date(today.getTime() + 5.5 * 60 * 60 * 1000).getUTCFullYear(),
+    new Date(today.getTime() + 5.5 * 60 * 60 * 1000).getUTCMonth(),
+    1
+  )) 
 
   if (next.start < firstOfThisMonth) {
     // Returning member — last payment was more than one month ago
@@ -177,9 +180,11 @@ export default async function MemberProfilePage({ params }) {
   // No payment ever — show the correct prorated first period
   // based on join_date, not today's date
   if (isFirstOfMonth(member.join_date)) {
-    const [jy, jm] = member.join_date.split('-').map(Number)
-    currentPeriodStart = member.join_date
-    currentPeriodEnd   = toDbDate(new Date(jy, jm, 0))
+    const istNow   = new Date(today.getTime() + (5.5 * 60 * 60 * 1000))
+    const istYear  = istNow.getUTCFullYear()
+    const istMonth = istNow.getUTCMonth() // 0-indexed
+    currentPeriodStart = getISTDateStr(new Date(istYear, istMonth, 1))
+    currentPeriodEnd   = getISTDateStr(new Date(istYear, istMonth + 1, 0))
   } else {
     // Member joined mid-month — prorate from join_date
     // This matches exactly what pay/page.jsx computes as the default

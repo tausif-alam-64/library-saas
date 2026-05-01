@@ -7,11 +7,13 @@ import { writeAuditLog } from '@/lib/audit'
 import { ERROR_CODES } from '@/utils/constants'
 
 function localDateString() {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const istDate = new Date(new Date().getTime() + IST_OFFSET_MS)
+  return [
+    istDate.getUTCFullYear(),
+    String(istDate.getUTCMonth() + 1).padStart(2, '0'),
+    String(istDate.getUTCDate()).padStart(2, '0'),
+  ].join('-')
 }
 
 export async function PATCH(request, { params }) {

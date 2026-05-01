@@ -22,6 +22,8 @@ export function PaymentForm({ paymentContext }) {
   const [mounted,      setMounted]      = useState(false)
   const [errors,       setErrors]       = useState({})
   const [amountEdited, setAmountEdited] = useState(false)
+  const [actualIsProrated, setActualIsProrated] = useState(false)
+  const [actualDaysCovered, setActualDaysCovered] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -42,6 +44,12 @@ export function PaymentForm({ paymentContext }) {
     const daysCovered = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
     // Days in the month of the period start
     const daysInMonth = new Date(sy, sm, 0).getDate()
+    
+    const actualIsProrated = daysCovered < daysInMonth
+    const actualDaysCovered = actualIsProrated ? daysCovered : null
+
+    setActualIsProrated(actualIsProrated)
+    setActualDaysCovered(actualDaysCovered)
 
     const shiftFee = paymentContext.shiftFee || paymentContext.defaultAmount || 500
 
@@ -93,8 +101,8 @@ export function PaymentForm({ paymentContext }) {
           paid_on:                 paidOn,
           payment_mode:            paymentMode,
           collected_by_partner_id: collectedBy,
-          is_prorated:             paymentContext.isProrated && !amountEdited,
-          days_covered:            paymentContext.daysRemaining || null,
+          is_prorated:             actualIsProrated,
+          days_covered:            actualDaysCovered,
           notes:                   notes.trim() || null,
         }),
       })

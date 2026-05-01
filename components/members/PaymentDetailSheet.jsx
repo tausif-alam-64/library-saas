@@ -112,7 +112,7 @@ export function PaymentDetailSheet({ payment, onClose }) {
               )}
 
               <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm text-muted">Date paid</span>
+                <span className="text-sm text-muted">Paid on</span>
                 <span className="text-sm font-medium text-primary">
                   {formatDate(payment.paid_on)}
                 </span>

@@ -227,29 +227,39 @@ export default async function MemberProfilePage({ params }) {
         <FeeSection memberId={member.id} feeInfo={feeInfo} />
       </div>
 
-      {/* Aadhar + notes section — only if data exists */}
-      {(member.aadhar_last4 || member.notes) && (
-        <div className="bg-white px-4 py-4 border-b border-gray-100 mt-2">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase
-                         tracking-wide mb-3">
-            Details
-          </h2>
-          {member.aadhar_last4 && (
-            <div className="flex items-center justify-between py-1">
-              <span className="text-sm text-gray-500">Aadhar (last 4)</span>
-              <span className="text-sm font-medium text-gray-900">
-                ••••  ••••  {member.aadhar_last4}
-              </span>
-            </div>
-          )}
-          {member.notes && (
-            <div className="mt-2 p-3 bg-amber-50 rounded-lg">
-              <p className="text-xs font-medium text-amber-700 mb-1">Note</p>
-              <p className="text-sm text-amber-800">{member.notes}</p>
-            </div>
-          )}
-        </div>
-      )}
+      {/* In members/[id]/page.jsx, replace the Details section condition and content */}
+{(member.aadhar_last4 || member.notes || member.address) && (
+  <div className="bg-white px-4 py-4 border-b border-gray-100 mt-2">
+    <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+      Details
+    </h2>
+
+    {member.address && (
+      <div className="flex items-start justify-between py-1">
+        <span className="text-sm text-gray-500 shrink-0">Address</span>
+        <span className="text-sm font-medium text-primary text-right ml-4">
+          {member.address}
+        </span>
+      </div>
+    )}
+
+    {member.aadhar_last4 && (
+      <div className="flex items-center justify-between py-1">
+        <span className="text-sm text-gray-500">Aadhar (last 4)</span>
+        <span className="text-sm font-medium text-primary">
+          ••••  ••••  {member.aadhar_last4}
+        </span>
+      </div>
+    )}
+
+    {member.notes && (
+      <div className="mt-2 p-3 bg-amber-50 rounded-lg">
+        <p className="text-xs font-medium text-amber-700 mb-1">Note</p>
+        <p className="text-sm text-amber-800">{member.notes}</p>
+      </div>
+    )}
+  </div>
+)}
 
       {/* Payment history */}
       <div className="mt-2">

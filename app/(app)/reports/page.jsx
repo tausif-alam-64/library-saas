@@ -185,10 +185,17 @@ export default async function ReportsPage({ searchParams }) {
       if (pa !== pb) return pa - pb
       return a.name.localeCompare(b.name)
     })
+  
+  // paid_count must only count active members who paid
+  // inactive members who paid before deactivation must not inflate the rate
+  const activeMemberIds = new Set(membersData.map((m) => m.id))
 
   const fee_collected   = Math.round(monthPayments.reduce((s, p) => s + Number(p.amount_paid), 0))
   const fee_pending     = Math.round(unpaidMembers.reduce((s, m) => s + m.amount_due, 0))
-  const paid_count      = membersPaidThisMonth.size
+  const paid_count = [...membersPaidThisMonth]
+    .filter((memberId) => activeMemberIds.has(memberId))
+    .length
+
   const total_count     = membersData.length
   const collection_rate = total_count > 0
     ? Math.round((paid_count / total_count) * 100)

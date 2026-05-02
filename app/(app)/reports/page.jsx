@@ -4,7 +4,7 @@ import { redirect }  from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { computeFeeStatus } from '@/lib/calculations'
 import { ROUTES, FEE_STATUS } from '@/utils/constants'
-import { formatCurrency, formatShift, getISTDateStr } from '@/utils/formatters'
+import { formatCurrency, formatShift, getISTToday } from '@/utils/formatters'
 import { MonthSelectorClient } from './_components/MonthSelectorClient'
 import { ReportSummary }       from './_components/ReportSummary'
 import { PartnerBreakdown }    from './_components/PartnerBreakdown'
@@ -14,12 +14,6 @@ import { ShareButton }         from './_components/ShareButton'
 import { ErrorState }          from '@/components/ui/ErrorState'
 import { getPartnerData } from '@/lib/getPartnerData'
 
-function localDateStr(date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
 
 export default async function ReportsPage({ searchParams }) {
   const supabase = await createClient()
@@ -32,25 +26,25 @@ export default async function ReportsPage({ searchParams }) {
   const libraryName     = partnerData.libraries?.name || 'Library'
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
 
-  const now           = new Date()
-  const istNow        = new Date(now.getTime() + (5.5 * 60 * 60 * 1000))
-  const currentMonthIST = istNow.getUTCMonth() + 1
-  const currentYearIST  = istNow.getUTCFullYear()
+  const { year: currentYearIST, month: currentMonthIST } = getISTToday()
   
   const resolvedParams = await searchParams
-  const reqMonth       = parseInt(resolvedParams?.month) || currentMonthIST
-  const reqYear        = parseInt(resolvedParams?.year)  || currentYearIST
-  
-  const isInFuture = reqYear > currentYearIST ||
-     (reqYear === currentYearIST && reqMonth > currentMonthIST)
+  const reqMonth  = parseInt(resolvedParams?.month) || currentMonthIST
+  const reqYear   = parseInt(resolvedParams?.year)  || currentYearIST
+
+  const isInFuture = reqYear > currentYearIST || 
+    (reqYear === currentYearIST && reqMonth > currentMonthIST)
 
   const year  = isInFuture ? currentYearIST  : reqYear
   const month = isInFuture ? currentMonthIST : reqMonth
 
   const monthStart    = new Date(year, month - 1, 1)
-  const monthStartStr = getISTDateStr(monthStart)
-  const monthEnd      = new Date(year, month, 0)
-  const monthEndStr   = getISTDateStr(monthEnd)
+
+  // Month bounds for the selected month (month/year from URL params):
+  const firstOfSelected = `${year}-${String(month).padStart(2, '0')}-01`
+  const lastDayNum      = new Date(year, month, 0).getDate()
+  const monthStartStr   = firstOfSelected
+  const monthEndStr     = `${year}-${String(month).padStart(2, '0')}-${String(lastDayNum).padStart(2, '0')}`
 
   // All five queries run in parallel
   const [

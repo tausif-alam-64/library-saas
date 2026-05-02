@@ -4,7 +4,7 @@ import { redirect }       from 'next/navigation'
 import { createClient }   from '@/lib/supabase/server'
 import { computeFeeStatus } from '@/lib/calculations'
 import { ROUTES, FEE_STATUS } from '@/utils/constants'
-import { formatDate }     from '@/utils/formatters'
+import { formatDate, getISTToday }     from '@/utils/formatters'
 import { StatCards }      from './_components/StatCards'
 import { OverdueList }    from './_components/OverdueList'
 import { ExpiringList }   from './_components/ExpiringList'
@@ -45,11 +45,18 @@ export default async function DashboardPage() {
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
 
   const now             = new Date()
-  const todayStr        = getISTDateStr(now)
-  const { start: monthStartStr, end: monthEndStr } = getISTMonthBounds(now)
+  const { year: istYear, month: istMonth, dateStr: todayStr } = getISTToday()
 
-  const sevenDaysLater  = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-  const sevenDaysStr    = getISTDateStr(sevenDaysLater)
+  const monthStartStr  = `${istYear}-${String(istMonth).padStart(2, '0')}-01`
+  const lastDay        = new Date(istYear, istMonth, 0).getDate()  // day 0 of next month = last of this
+  const monthEndStr    = `${istYear}-${String(istMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+
+  const sevenDaysLater = new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000 + 5.5 * 60 * 60 * 1000)
+  const sevenDaysStr   = [
+    sevenDaysLater.getUTCFullYear(),
+    String(sevenDaysLater.getUTCMonth() + 1).padStart(2, '0'),
+    String(sevenDaysLater.getUTCDate()).padStart(2, '0'),
+  ].join('-')
 
   // All five queries run simultaneously — none depend on each other
   // No exact fee amount needed that's why fee structure query removed

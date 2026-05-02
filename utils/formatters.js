@@ -1,5 +1,7 @@
 // utils/formatters.js
 
+// dont import lib/calculation.js because it creates a circular loop and can be possibly an error appear
+
 // Format currency in Indian Rupees
 // formatCurrency(500) → "₹500"
 // formatCurrency(1250.5) → "₹1,251"
@@ -129,4 +131,17 @@ export function getISTMonthBounds(date) {
     start: getISTDateStr(firstDay),
     end:   getISTDateStr(lastDay),
   }
+}
+
+// Get current date components in IST
+// Vercel servers run UTC — this corrects for India timezone (UTC+5:30)
+// Returns { year, month (1-indexed), day, dateStr }
+export function getISTToday() {              
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const ist = new Date(new Date().getTime() + IST_OFFSET_MS)
+  const year  = ist.getUTCFullYear()
+  const month = ist.getUTCMonth() + 1  // 1-indexed
+  const day   = ist.getUTCDate()
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  return { year, month, day, dateStr }
 }

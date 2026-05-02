@@ -4,7 +4,7 @@ import { redirect }  from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { computeFeeStatus } from '@/lib/calculations'
 import { ROUTES, FEE_STATUS } from '@/utils/constants'
-import { formatCurrency, formatShift } from '@/utils/formatters'
+import { formatCurrency, formatShift, getISTDateStr } from '@/utils/formatters'
 import { MonthSelectorClient } from './_components/MonthSelectorClient'
 import { ReportSummary }       from './_components/ReportSummary'
 import { PartnerBreakdown }    from './_components/PartnerBreakdown'
@@ -33,12 +33,12 @@ export default async function ReportsPage({ searchParams }) {
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
 
   const now           = new Date()
-  const currentMonthIST = istNow.getUTCMonth() + 1
   const istNow        = new Date(now.getTime() + (5.5 * 60 * 60 * 1000))
+  const currentMonthIST = istNow.getUTCMonth() + 1
   const currentYearIST  = istNow.getUTCFullYear()
   
-  const reqMonth       = parseInt(resolvedParams?.month) || currentMonthIST
   const resolvedParams = await searchParams
+  const reqMonth       = parseInt(resolvedParams?.month) || currentMonthIST
   const reqYear        = parseInt(resolvedParams?.year)  || currentYearIST
   
   const isInFuture = reqYear > currentYearIST ||

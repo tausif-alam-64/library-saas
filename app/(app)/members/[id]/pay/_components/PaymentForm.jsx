@@ -22,8 +22,8 @@ export function PaymentForm({ paymentContext }) {
   const [mounted,      setMounted]      = useState(false)
   const [errors,       setErrors]       = useState({})
   const [amountEdited, setAmountEdited] = useState(false)
-  const [actualIsProrated, setActualIsProrated] = useState(false)
-  const [actualDaysCovered, setActualDaysCovered] = useState(null)
+  const [actualIsProrated, setActualIsProrated] = useState(paymentContext.is_prorated ?? false)
+  const [actualDaysCovered, setActualDaysCovered] = useState(paymentContext.daysRemaining ?? null)
 
   useEffect(() => { setMounted(true) }, [])
 

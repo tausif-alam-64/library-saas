@@ -102,6 +102,18 @@ export function FeeSection({ memberId, feeInfo }) {
         {/* ── GRACE STATE ─────────────────────────────────────────────── */}
       {status === FEE_STATUS.GRACE && (
         <div className="space-y-3">
+          <div className="bg-green-50 rounded-xl px-3 py-2.5">
+            <p className="text-[10px] font-semibold text-green-700 uppercase
+                           tracking-wide mb-1">
+              Current paid period
+            </p>
+            <p className="text-sm font-semibold text-green-900">
+              {formatDate(lastPayment.period_start_date)} — {formatDate(lastPayment.period_end_date)}
+            </p>
+            <p className="text-xs text-green-700 mt-0.5">
+              {formatCurrency(lastPayment.amount_paid)} · {formatDate(lastPayment.paid_on)} · {lastPayment.payment_mode?.toUpperCase()}
+            </p>
+          </div>
           <div className="bg-amber-50 rounded-xl px-3 py-2.5">
             <p className="text-[10px] font-semibold text-amber-700 uppercase
                            tracking-wide mb-1">

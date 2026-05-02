@@ -288,7 +288,7 @@ export function AddMemberForm({ fees, initialSeats = [] }) {
                 Personal details
               </h2>
               <p className="text-xs text-muted">
-                Enter the student's information from their ID proof
+                Enter the students information from their ID proof
               </p>
             </div>
 

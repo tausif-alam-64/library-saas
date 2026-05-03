@@ -8,29 +8,35 @@ import { getPartnerData } from '@/lib/getPartnerData'
 export default async function AppLayout({ children }) {
   // getPartnerData() is cached — if a page also calls it,
   // only ONE database query runs total for this entire request
-  const partner = await getPartnerData()
+  let partnerData
+  try {
+    partnerData = await getPartnerData()
+  } catch (err) {
+    console.error('[AppLayout] getPartnerData threw:', err)
+    partnerData = null
+  }
 
   // Partner record missing — auth account exists but no partner row
   // This should not happen in normal operation but must be handled
-  if ( !partner ) {
-    console.error('[AppLayout] No partner record found for user:', user.id, partnerError?.message)
+  if ( !partnerData ) {
+    console.error('[AppLayout] No partner record found ')
     redirect(ROUTES.LOGIN)
   }
 
-  const library = partner.libraries
+  const library = partnerData.libraries
 
   if (!library) {
-    console.error('[AppLayout] No library found for partner:', partner.id)
+    console.error('[AppLayout] No library found for partner:', partnerData.id)
     redirect(ROUTES.LOGIN)
   }
 
   // Prepare clean objects to pass as props
   // We strip the nested libraries object from partner to keep it clean
-  const partnerData = {
-    id: partner.id,
-    name: partner.name,
-    role: partner.role,
-    library_id: partner.library_id,
+  const partnerInfo = {
+    id: partnerData.id,
+    name: partnerData.name,
+    role: partnerData.role,
+    library_id: partnerData.library_id,
   }
 
   const libraryData = {
@@ -46,7 +52,7 @@ export default async function AppLayout({ children }) {
   }
 
   return (
-    <AppShell partner={partnerData} library={libraryData}>
+    <AppShell partner={partnerInfo} library={libraryData}>
       {children}
     </AppShell>
   )

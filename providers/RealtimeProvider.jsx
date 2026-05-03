@@ -75,7 +75,7 @@ export function RealtimeProvider({ children }) {
       })
 
     return () => { supabase.removeChannel(channel) }
-  }, [library?.id])
+  }, [library?.id, markSeatOccupied, markSeatFree])
 
   return children
 }

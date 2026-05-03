@@ -75,7 +75,23 @@ export async function POST(request, { params }) {
         { status: 400 }
       )
     }
+    
+    // Seat varification 
+    const { data: seat, error: seatError } = await supabase
+      .from('seats')
+      .select('id')
+      .eq('id', seat_id)
+      .eq('library_id', partner.library_id)  // Bug 5 — must belong to this library
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .single()
 
+    if (seatError || !seat) {
+      return NextResponse.json(
+        { error: ERROR_CODES.NOT_FOUND, message: 'Seat not found in this library' },
+        { status: 404 }
+      )
+    }
     // Check member has no active allocation already
     const { data: existingAlloc } = await supabase
       .from('seat_allocations')
@@ -92,11 +108,12 @@ export async function POST(request, { params }) {
       )
     }
 
-    // Check seat conflict
+    // conflict check must also scope by library_id
     const { data: conflict } = await supabase
       .from('seat_allocations')
       .select('id')
       .eq('seat_id', seat_id)
+      .eq('library_id', partner.library_id)
       .eq('is_active', true)
       .is('deleted_at', null)
       .or(

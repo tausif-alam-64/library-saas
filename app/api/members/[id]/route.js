@@ -6,6 +6,17 @@ import { getPartner, requirePrimary } from '@/lib/auth'
 import { writeAuditLog } from '@/lib/audit'
 import { ERROR_CODES } from '@/utils/constants'
 
+
+function localDateString() {
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const ist = new Date(new Date().getTime() + IST_OFFSET_MS)
+  return [
+    ist.getUTCFullYear(),
+    String(ist.getUTCMonth() + 1).padStart(2, '0'),
+    String(ist.getUTCDate()).padStart(2, '0'),
+  ].join('-')
+}
+
 export async function PATCH(request, { params }) {
   const { id } = await params
   const supabase = await createClient()
@@ -38,21 +49,37 @@ export async function PATCH(request, { params }) {
 
   // Validate phone if provided
   if (body.phone !== undefined) {
-    const digits = body.phone.replace(/\D/g, '')
-    if (digits.length !== 10) {
-      return NextResponse.json(
-        { error: ERROR_CODES.VALIDATION_ERROR, message: 'Phone must be 10 digits', field: 'phone' },
-        { status: 400 }
-      )
-    }
-  }
-
-  // Validate name if provided
-  if (body.name !== undefined && body.name.trim().length < 2) {
+  if (typeof body.phone !== 'string') {
     return NextResponse.json(
-      { error: ERROR_CODES.VALIDATION_ERROR, message: 'Name must be at least 2 characters', field: 'name' },
+      { error: ERROR_CODES.VALIDATION_ERROR, message: 'Phone must be a string', field: 'phone' },
       { status: 400 }
     )
+  }
+  const digits = body.phone.replace(/\D/g, '')
+   if (digits.length !== 10) {
+     return NextResponse.json(
+       { error: ERROR_CODES.VALIDATION_ERROR, message: 'Phone must be 10 digits', field: 'phone' },
+       { status: 400 }
+     )
+   }
+   body.phone = digits  // Clean digits only
+  } 
+
+ // Validate name if provided  
+ if (body.name !== undefined) {
+   if (typeof body.name !== 'string') {
+     return NextResponse.json(
+       { error: ERROR_CODES.VALIDATION_ERROR, message: 'Name must be a string', field: 'name' },
+       { status: 400 }
+     )
+   }
+   body.name = body.name.trim()
+   if (body.name.length < 2) {
+     return NextResponse.json(
+       { error: ERROR_CODES.VALIDATION_ERROR, message: 'Name must be at least 2 characters', field: 'name' },
+       { status: 400 }
+     )
+   }
   }
 
   try {
@@ -150,6 +177,7 @@ export async function DELETE(request, { params }) {
     }
 
     const now = new Date().toISOString()
+    const nowIstDate = localDateString() // ← our IST helper
 
     // Soft delete the member
     await supabase
@@ -162,7 +190,7 @@ export async function DELETE(request, { params }) {
       .from('seat_allocations')
       .update({
         is_active: false,
-        end_date: now.split('T')[0],
+        end_date: nowIstDate,
         updated_at: now,
       })
       .eq('member_id', id)

@@ -108,6 +108,56 @@ export function MemberActions({ member, currentAllocation }) {
     }
   }
 
+  // Add this function, keep handleConfirmAssignSeat for the outer button as fallback
+async function handleConfirmAssignSeatWith(selection) {
+  if (!selection || isAssigning) return
+  setIsAssigning(true)
+
+  try {
+    // IST date for start_date
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+    const istDate = new Date(new Date().getTime() + IST_OFFSET_MS)
+    const today = [
+      istDate.getUTCFullYear(),
+      String(istDate.getUTCMonth() + 1).padStart(2, '0'),
+      String(istDate.getUTCDate()).padStart(2, '0'),
+    ].join('-')
+
+    const res = await fetch(`/api/members/${member.id}/assign-seat`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        seat_id:    selection.seat_id,
+        shift:      selection.shift,
+        start_date: today,
+      }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      if (data.error === 'SEAT_CONFLICT') {
+        addToast('That seat and shift is already occupied', 'error')
+        setAssignSeatSelection(null)
+        return
+      }
+      throw new Error(data.message || 'Failed to assign seat')
+    }
+
+    addToast(`Seat ${selection.seat_number} assigned to ${member.name}`, 'success')
+    setIsAssignSeatOpen(false)
+    setAssignSeatSelection(null)
+    router.refresh()
+
+  } catch (err) {
+    console.error('[MemberActions] assignSeat error:', err)
+    addToast(err.message || 'Failed to assign seat', 'error')
+    setAssignSeatSelection(null)
+  } finally {
+    setIsAssigning(false)
+  }
+}
+
   async function handleSaveEdit() {
     if (isSubmitting) return
 
@@ -545,41 +595,17 @@ function handleReactivate() {
             ) : (
               <SeatPickerStep
                 initialSeats={assignSeats}
-                onSelect={(selection) => setAssignSeatSelection(selection)}
+                onSelect={async (selection) => {
+                  // Set selection for button label rendering
+                  setAssignSeatSelection(selection)
+                  // Immediately trigger assignment — no second tap required
+                  await handleConfirmAssignSeatWith(selection)
+                }}
                 selectedSeatId={assignSeatSelection?.seat_id}
                 selectedShift={assignSeatSelection?.shift}
               />
             )}
-          </div>
-
-          {/* Confirm button — fixed inside sheet above safe area */}
-          {assignSeatSelection && (
-            <div className="shrink-0 px-4 py-3 bg-white border-t border-gray-100"
-                 style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
-              <button
-                onClick={handleConfirmAssignSeat}
-                disabled={isAssigning}
-                className="w-full h-12 bg-primary text-white rounded-xl
-                           text-sm font-semibold disabled:bg-gray-300
-                           active:opacity-90 touch-manipulation
-                           flex items-center justify-center gap-2"
-              >
-                {isAssigning ? (
-                  <>
-                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10"
-                        stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
-                      <path d="M12 2a10 10 0 0110 10" stroke="white"
-                        strokeWidth="3" strokeLinecap="round"/>
-                    </svg>
-                    Assigning...
-                  </>
-                ) : (
-                  `Assign Seat ${assignSeatSelection.seat_number} — ${formatShift(assignSeatSelection.shift)}`
-                )}
-              </button>
-            </div>
-          )}
+          </div>         
         </div>
       </>
     </RoleGuard>

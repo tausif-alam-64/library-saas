@@ -29,14 +29,21 @@ export default async function ReportsPage({ searchParams }) {
   const { year: currentYearIST, month: currentMonthIST } = getISTToday()
   
   const resolvedParams = await searchParams
-  const reqMonth  = parseInt(resolvedParams?.month) || currentMonthIST
-  const reqYear   = parseInt(resolvedParams?.year)  || currentYearIST
+  const monthParam = parseInt(resolvedParams?.month) 
+  const yearParam  = parseInt(resolvedParams?.year)  
 
-  const isInFuture = reqYear > currentYearIST || 
-    (reqYear === currentYearIST && reqMonth > currentMonthIST)
+  const isValidMonth = Number.isInteger(monthParam) && monthParam >= 1 && monthParam <= 12
+  const isValidYear  = Number.isInteger(yearParam) && yearParam >= 2020 && yearParam <= 2100
 
-  const year  = isInFuture ? currentYearIST  : reqYear
-  const month = isInFuture ? currentMonthIST : reqMonth
+  const safeMonth = isValidMonth ? monthParam : currentMonthIST
+  const safeYear  = isValidYear  ? yearParam  : currentYearIST
+
+  const isInFuture =
+    safeYear > currentYearIST ||
+    (safeYear === currentYearIST && safeMonth > currentMonthIST)
+
+  const year  = isInFuture ? currentYearIST  : safeYear
+  const month = isInFuture ? currentMonthIST : safeMonth
 
   const monthStart    = new Date(year, month - 1, 1)
 

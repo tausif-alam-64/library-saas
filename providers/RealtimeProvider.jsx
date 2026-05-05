@@ -48,6 +48,7 @@ export function RealtimeProvider({ children }) {
             member_id:   payload.new.member_id,
             member_name: memberName,
             fee_status:  null, // Cannot compute without payment data
+            allocation_id: payload.new.id,  // ← payload.new.id is the seat_allocation row UUID
           })
         }
       )

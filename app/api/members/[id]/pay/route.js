@@ -7,6 +7,16 @@ import { writeAuditLog } from '@/lib/audit'
 import { validatePayment } from '@/lib/validators'
 import { ERROR_CODES } from '@/utils/constants'
 
+function localDateString() {
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const istDate = new Date(new Date().getTime() + IST_OFFSET_MS)
+  return [
+    istDate.getUTCFullYear(),
+    String(istDate.getUTCMonth() + 1).padStart(2, '0'),
+    String(istDate.getUTCDate()).padStart(2, '0'),
+  ].join('-')
+}
+
 export async function POST(request, { params }) {
   const { id } = await params
 
@@ -46,6 +56,14 @@ export async function POST(request, { params }) {
         message: validationError.message,
         field: validationError.field,
       },
+      { status: 400 }
+    )
+  }
+
+  const todayIST = localDateString()
+  if (body.paid_on > todayIST) {
+    return NextResponse.json(
+      { error: ERROR_CODES.VALIDATION_ERROR, message: 'paid_on cannot be a future date', field: 'paid_on' },
       { status: 400 }
     )
   }
@@ -97,23 +115,30 @@ export async function POST(request, { params }) {
       )
     }
 
-    // Prevent duplicate payment for same period
-    const { data: existingPayment } = await supabase
+    // Prevent duplicate/overlap payment for same period
+   const { data: overlappingPayments } = await supabase
       .from('fee_payments')
-      .select('id')
+      .select('period_start_date, period_end_date')
       .eq('member_id', id)
       .eq('library_id', partner.library_id)
-      .eq('period_start_date', body.period_start_date)
-      .eq('period_end_date', body.period_end_date)
       .is('deleted_at', null)
-      .maybeSingle()
+      .lte('period_start_date', body.period_end_date)
+      .gte('period_end_date', body.period_start_date)
 
-    if (existingPayment) {
+    if (overlappingPayments?.length) {
+      const match = overlappingPayments.find(
+        p =>
+          p.period_start_date === body.period_start_date &&
+          p.period_end_date === body.period_end_date
+      )
+
       return NextResponse.json(
         {
-          error:   ERROR_CODES.VALIDATION_ERROR,
-          message: 'A payment for this exact period has already been recorded. Check payment history before proceeding.',
-          },
+          error: ERROR_CODES.VALIDATION_ERROR,
+          message: match
+            ? 'A payment for this exact period already exists.'
+            : `Payment overlaps with existing period (${overlappingPayments[0].period_start_date} — ${overlappingPayments[0].period_end_date}).`
+        },
         { status: 400 }
       )
     }

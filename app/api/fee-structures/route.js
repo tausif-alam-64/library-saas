@@ -6,6 +6,16 @@ import { getPartner, requirePrimary } from '@/lib/auth'
 import { writeAuditLog } from '@/lib/audit'
 import { ERROR_CODES }   from '@/utils/constants'
 
+function localDateString() {
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000
+  const ist = new Date(new Date().getTime() + IST_OFFSET_MS)
+  return [
+    ist.getUTCFullYear(),
+    String(ist.getUTCMonth() + 1).padStart(2, '0'),
+    String(ist.getUTCDate()).padStart(2, '0'),
+  ].join('-')
+}
+
 function localDateStr(date) {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -110,7 +120,7 @@ export async function POST(request) {
   }
 
   // Effective date cannot be in the past — only today or future
-  const todayStr = localDateStr(new Date())
+  const todayStr = localDateString()
   if (valid_from < todayStr) {
     return NextResponse.json(
       {

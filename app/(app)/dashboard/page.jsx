@@ -44,9 +44,17 @@ export default async function DashboardPage() {
   const libraryId       = partnerData.library_id
   const gracePeriodDays = partnerData.libraries?.grace_period_days ?? 10
 
-  const now             = new Date()
-  const { year: istYear, month: istMonth, dateStr: todayStr } = getISTToday()
+  const { year: istYear, month: istMonth, dateStr: todayStr, day: istDay } = getISTToday()
 
+  const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December']
+  const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+   
+  // Compute IST day of week
+  const istDate    = new Date(istYear, istMonth - 1, istDay)
+  const dayName    = DAY_NAMES[istDate.getDay()]
+  const monthName  = MONTH_NAMES[istMonth - 1]
+  
   const monthStartStr  = `${istYear}-${String(istMonth).padStart(2, '0')}-01`
   const lastDay        = new Date(istYear, istMonth, 0).getDate()  // day 0 of next month = last of this
   const monthEndStr    = `${istYear}-${String(istMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
@@ -119,6 +127,11 @@ export default async function DashboardPage() {
   if (paymentsError) {
     console.error('[DashboardPage] payments:', paymentsError.message)
     return <ErrorState message="Could not load payment data." />
+  }
+  if (activityError) {
+    // Non-critical — log but do not crash the dashboard
+    console.error('[DashboardPage] activity query:', activityError.message)
+    // rawActivity will be null — activities array will be empty — that is fine
   }
 
   // Lookup maps
@@ -222,12 +235,10 @@ export default async function DashboardPage() {
     <div className="pb-24 space-y-5">
       <div className="px-4 pt-4">
         <p className="text-xs text-muted">
-          {now.toLocaleDateString('en-IN', { weekday: 'long' })}
+          {dayName}
         </p>
         <p className="text-base font-bold text-primary">
-          {now.toLocaleDateString('en-IN', {
-            day: 'numeric', month: 'long', year: 'numeric',
-          })}
+          {istDay} {monthName} {istYear}
         </p>
       </div>
 

@@ -7,6 +7,7 @@ export function OfflineBanner() {
   const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
+    if (typeof navigator === 'undefined') return
     // Initialize with current network state
     setIsOnline(navigator.onLine)
 

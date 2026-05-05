@@ -1,6 +1,7 @@
 // app/(app)/reports/_components/MonthSelectorClient.jsx
 'use client'
 
+import { getISTToday } from '@/utils/formatters'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 
 // month — 1-12
@@ -24,23 +25,22 @@ export function MonthSelectorClient({ month, year }) {
     if (m < 1) { m = 12; y -= 1 }
     navigate(m, y)
   }
+  
+  const { year: currentYear, month: currentMonth } = getISTToday()
+  const isCurrentMonth = year === currentYear && month === currentMonth
 
   function goForward() {
-    const now = new Date()
-    // Cannot go beyond current month
-    if (year === now.getFullYear() && month === now.getMonth() + 1) return
+    if(year === currentYear && month === currentMonth) return
     let m = month + 1
     let y = year
     if (m > 12) { m = 1; y += 1 }
     navigate(m, y)
   }
 
-  const now            = new Date()
-  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
-
   const monthName = new Date(year, month - 1, 1).toLocaleDateString('en-IN', {
     month: 'long',
     year:  'numeric',
+    timeZone: 'Asia/Kolkata',
   })
 
   return (

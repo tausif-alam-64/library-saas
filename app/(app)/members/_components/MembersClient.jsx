@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { MemberCard } from '@/components/members/MemberCard'
 import { MemberSearchBar } from '@/components/members/MemberSearchBar'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -54,8 +54,15 @@ function sortMembers(members) {
 
 export function MembersClient({ initialMembers, totalCount }) {
   const router = useRouter()
+
+  // here is a problem that i need to fix later in dashboard there is overdue & grace & unpaid all shows and when we click on see all it redirect to only one right now i use all as a filter in overdueList.js
+  const searchParams = useSearchParams()
+  const urlFilter    = searchParams.get('filter')
+  const VALID_FILTERS = ['all', 'overdue', 'grace', 'unpaid', 'paid', 'inactive']
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeFilter, setActiveFilter] = useState('all')
+  const [activeFilter, setActiveFilter] = useState(
+    VALID_FILTERS.includes(urlFilter) ? urlFilter : 'all'
+  )
 
   // Filter then sort — all client-side, instant for ~200 members
   const displayMembers = useMemo(() => {

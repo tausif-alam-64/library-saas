@@ -22,7 +22,7 @@ export function ConfirmDialog() {
     if (!confirm) return;
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+  }, [confirm, handleKeyDown]);
 
   if (!confirm) return null;
 

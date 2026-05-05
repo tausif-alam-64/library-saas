@@ -17,7 +17,7 @@ export function OverdueList({ members, totalCount }) {
         </h2>
         {totalCount > members.length && (
           <Link
-            href={`${ROUTES.MEMBERS}?filter=overdue`}
+            href={`${ROUTES.MEMBERS}?filter=all`}   // <-  i am using all as a filter here in future i will impliment saperate filter for each valid filter
             className="text-xs text-info touch-manipulation"
           >
             See all {totalCount}

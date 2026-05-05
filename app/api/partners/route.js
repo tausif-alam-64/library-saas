@@ -89,6 +89,7 @@ export async function POST(request) {
       .from('partners')
       .select('id')
       .eq('library_id', partner.library_id)
+      .eq('is_active', true)   // ← add this — only active count toward the limit
       .is('deleted_at', null)
 
     // Max 5 partners per library (practical limit)

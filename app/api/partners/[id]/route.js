@@ -113,7 +113,37 @@ export async function PATCH(request, { params }) {
     }
   }
 
+  const VALID_ROLES = ['primary', 'viewer']
   try {
+    if (body.role !== undefined) {
+      if (!VALID_ROLES.includes(body.role)) {
+        return NextResponse.json(
+          { error: ERROR_CODES.VALIDATION_ERROR, message: 'Role must be primary or viewer', field: 'role' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (body.name !== undefined && (typeof body.name !== 'string' || body.name.trim().length < 2)) {
+      return NextResponse.json(
+        { error: ERROR_CODES.VALIDATION_ERROR, message: 'Name must be at least 2 characters', field: 'name' },
+        { status: 400 }
+      )
+    }
+
+    if (body.phone !== undefined && body.phone !== null && typeof body.phone !== 'string') {
+      return NextResponse.json(
+        { error: ERROR_CODES.VALIDATION_ERROR, message: 'Phone must be a string', field: 'phone' },
+        { status: 400 }
+      )
+    }
+
+    if (body.is_active !== undefined && typeof body.is_active !== 'boolean') {
+      return NextResponse.json(
+        { error: ERROR_CODES.VALIDATION_ERROR, message: 'is_active must be boolean' },
+        { status: 400 }
+      )
+    }
     const allowed = ['name', 'phone', 'role', 'is_active']
     const updates = {}
     allowed.forEach((field) => {

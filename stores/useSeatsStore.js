@@ -26,6 +26,7 @@ const useSeatsStore = create((set, get) => ({
           member_id: memberInfo.member_id,
           member_name: memberInfo.member_name || null,
           fee_status: memberInfo.fee_status || null,
+          allocation_id: memberInfo.allocation_id || null,
         }
 
         if (shift === 'fulltime') {

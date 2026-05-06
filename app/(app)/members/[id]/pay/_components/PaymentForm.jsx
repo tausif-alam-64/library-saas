@@ -7,6 +7,75 @@ import { ROUTES, PAYMENT_MODES } from '@/utils/constants'
 import { formatCurrency, toDbDate } from '@/utils/formatters'
 import useUIStore              from '@/stores/useUIStore'
 
+function calculateAmountForPeriod(startStr, endStr, monthlyFee) {
+  // Parse as local date components — never new Date(string) which parses UTC
+  const [sy, sm, sd] = startStr.split('-').map(Number)
+  const [ey, em, ed] = endStr.split('-').map(Number)
+
+  const startDate = new Date(sy, sm - 1, sd)
+  const endDate   = new Date(ey, em - 1, ed)
+
+  // Guard against invalid range — caller should validate but be defensive
+  if (startDate > endDate) {
+    return { amount: 0, isProrated: false, daysCovered: null, monthCount: 0 }
+  }
+
+  let totalRaw  = 0
+  let hasPartialMonth = false
+  let monthCount = 0
+  // For single partial month — track days for days_covered field
+  let singlePartialDays = null
+
+  // Walk month by month from start to end
+  const cursor = new Date(sy, sm - 1, 1) // first day of start month
+
+  while (cursor <= endDate) {
+    const year        = cursor.getFullYear()
+    const month       = cursor.getMonth()
+    const monthStart  = new Date(year, month, 1)
+    const monthEnd    = new Date(year, month + 1, 0)
+    const daysInMonth = monthEnd.getDate()
+
+    // Clamp to the actual period being paid
+    const coveredStart = startDate > monthStart ? startDate : monthStart
+    const coveredEnd   = endDate   < monthEnd   ? endDate   : monthEnd
+
+    const daysCoveredThisMonth =
+      Math.round((coveredEnd - coveredStart) / (1000 * 60 * 60 * 24)) + 1
+
+    if (daysCoveredThisMonth >= daysInMonth) {
+      // Full month covered — add standard fee without rounding yet
+      totalRaw += monthlyFee
+    } else {
+      // Partial month — prorate without rounding yet
+      hasPartialMonth = true
+      singlePartialDays = daysCoveredThisMonth
+      const dailyRate = monthlyFee / daysInMonth
+      totalRaw += dailyRate * daysCoveredThisMonth
+    }
+
+    monthCount++
+    cursor.setMonth(cursor.getMonth() + 1)
+  }
+
+  // Round total once at the end — not per month
+  // This prevents compounding rounding errors across months
+  const amount = Math.round(totalRaw / 10) * 10
+
+  // days_covered only meaningful for single partial month
+  // For multi-month or full-month payments, null is correct
+  const daysCovered = (monthCount === 1 && hasPartialMonth)
+    ? singlePartialDays
+    : null
+
+  return {
+    amount,
+    isProrated:   hasPartialMonth,
+    daysCovered,
+    monthCount,
+  }
+}
+
 export function PaymentForm({ paymentContext }) {
   const router   = useRouter()
   const addToast = useUIStore((state) => state.addToast)
@@ -37,31 +106,20 @@ export function PaymentForm({ paymentContext }) {
 
     if (!sy || !sm || !sd || !ey || !em || !ed) return
 
-    const startDate = new Date(sy, sm - 1, sd)
-    const endDate   = new Date(ey, em - 1, ed)
-
-    // Days covered (inclusive)
-    const daysCovered = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
-    // Days in the month of the period start
-    const daysInMonth = new Date(sy, sm, 0).getDate()
-    
-    const actualIsProrated = daysCovered < daysInMonth
-    const actualDaysCovered = actualIsProrated ? daysCovered : null
-
-    setActualIsProrated(actualIsProrated)
-    setActualDaysCovered(actualDaysCovered)
+    // Validate dates are real before computing
+    if (sm < 1 || sm > 12 || em < 1 || em > 12) return  
 
     const shiftFee = paymentContext.shiftFee || paymentContext.defaultAmount || 500
 
-    if (daysCovered >= daysInMonth) {
-      // Full month or more — use standard fee
-      setAmount(String(shiftFee))
-    } else {
-      // Prorate based on days covered
-      const dailyRate  = shiftFee / daysInMonth
-      const prorated   = Math.round(dailyRate * daysCovered / 10) * 10
-      setAmount(String(prorated))
-    }
+    const result = calculateAmountForPeriod(periodStart, periodEnd, shiftFee)
+
+    // Guard against 0 amount which would mean invalid period
+    if (result.amount <= 0) return
+
+    setActualIsProrated(result.isProrated)
+    setActualDaysCovered(result.daysCovered)   // null for full months or multi-month
+    setAmount(String(result.amount))
+    
   }, [periodStart, periodEnd]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function validate() {

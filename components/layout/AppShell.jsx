@@ -3,20 +3,18 @@
 
 import { useLayoutEffect } from 'react'
 import useAppStore from '@/stores/useAppStore'
-import { TopBar }        from './TopBar'
-import { BottomNav }     from './BottomNav'
-import { Toast }         from '@/components/ui/Toast'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { OfflineBanner } from '@/components/ui/OfflineBanner'
+import { TopBar } from './TopBar'
+
+// AppShell now only handles what NEEDS data:
+// - hydrating Zustand with partner/library
+// - rendering TopBar (needs library.name)
+// - rendering the main content area
+// BottomNav, Toast, ConfirmDialog, OfflineBanner moved to layout
+// because they have zero data dependency
 
 export function AppShell({ partner, library, children }) {
   const setSession = useAppStore((state) => state.setSession)
 
-  // Track every field that downstream components read from the store.
-  // When any of these change (e.g. grace_period_days updated via settings),
-  // the store is refreshed with the latest server-provided values.
-  // Using JSON.stringify as a stable single dependency prevents excessive calls
-  // while ensuring all nested field changes are detected.
   const partnerKey = JSON.stringify({ id: partner.id, role: partner.role })
   const libraryKey = JSON.stringify({
     id:                  library.id,
@@ -31,20 +29,18 @@ export function AppShell({ partner, library, children }) {
   }, [partnerKey, libraryKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <OfflineBanner />
+    <>
       <TopBar libraryName={library.name} />
-      <main style={{
-        flex:          1,
-        paddingTop:    '56px',
-        paddingBottom: '72px',
-        overflowX:     'hidden',
-      }}>
+      <main
+        style={{
+          flex:          1,
+          paddingTop:    '56px',
+          paddingBottom: '72px',
+          overflowX:     'hidden',
+        }}
+      >
         {children}
       </main>
-      <BottomNav />
-      <Toast />
-      <ConfirmDialog />
-    </div>
+    </>
   )
 }

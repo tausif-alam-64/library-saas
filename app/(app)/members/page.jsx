@@ -28,7 +28,7 @@ export default async function MembersPage() {
   ] = await Promise.all([
     supabase
       .from('members')
-      .select('id, name, phone, address, photo_url, join_date, status, notes')
+      .select('id, name, phone, join_date, status')
       .eq('library_id', libraryId)
       .is('deleted_at', null)
       .order('name', { ascending: true }),
@@ -101,11 +101,8 @@ export default async function MembersPage() {
       id: member.id,
       name: member.name,
       phone: member.phone,
-      address: member.address,
-      photo_url: member.photo_url,
       join_date: member.join_date,
       status: member.status,
-      notes: member.notes,
       current_allocation: alloc,
       fee_status: feeStatus,
       days_overdue: daysOverdue,

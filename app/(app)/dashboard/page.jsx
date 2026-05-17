@@ -74,6 +74,7 @@ export default async function DashboardPage() {
     { data: rawPayments,    error: paymentsError },
     { count: totalSeats                          },
     { data: rawActivity,    error: activityError },
+    { data: allPartners                          },
   ] = await Promise.all([
     supabase
       .from('members')
@@ -105,7 +106,7 @@ export default async function DashboardPage() {
 
     supabase
       .from('audit_logs')
-      .select(`id, action, new_data, created_at, partners(name)`)
+      .select(`id, action, new_data, created_at, partner_id`)
       .eq('library_id', libraryId)
       .in('action', [
         'create_member', 'record_payment', 'mark_member_inactive','reactivate_member',
@@ -113,6 +114,12 @@ export default async function DashboardPage() {
       ])
       .order('created_at', { ascending: false })
       .limit(5),
+
+    supabase
+      .from('partners')
+      .select('id, name')
+      .eq('library_id', libraryId)
+      .is('deleted_at', null),
   ])
   
 
@@ -133,6 +140,9 @@ export default async function DashboardPage() {
     console.error('[DashboardPage] activity query:', activityError.message)
     // rawActivity will be null — activities array will be empty — that is fine
   }
+
+  const partnerNameMap = {}
+  ;(allPartners || []).forEach((p) => { partnerNameMap[p.id] = p.name })
 
   // Lookup maps
   const latestPaymentByMember = {}
@@ -219,7 +229,7 @@ export default async function DashboardPage() {
     id:           a.id,
     action:       a.action,
     description:  buildActivityDescription(a.action, a.new_data),
-    partner_name: a.partners?.name || 'Unknown',
+    partner_name: partnerNameMap[a.partner_id] || 'Unknown',
     created_at:   a.created_at,
   }))
 

@@ -20,6 +20,7 @@ export function StatCards({ stats }) {
         label="Active members"
         value={stats.total_active}
         sub={`${stats.seats_total} seats total`}
+        accent='info'
       />
 
       {/* Seats occupied */}

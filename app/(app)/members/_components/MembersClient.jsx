@@ -132,7 +132,7 @@ export function MembersClient({ initialMembers, totalCount }) {
   return (
     <>
       {/* Sticky search + filter section */}
-      <div className="sticky top-14 z-30 bg-gray-50 px-4 pt-3 pb-2 space-y-2.5">
+      <div className="sticky top-2 z-30 bg-gray-50 px-4 pt-3 pb-2 space-y-2.5">
         <MemberSearchBar value={searchQuery} onChange={setSearchQuery} />
 
         {/* Filter pills — horizontally scrollable */}
@@ -174,7 +174,7 @@ export function MembersClient({ initialMembers, totalCount }) {
         </div>
       </div>
       {/* searchbar and filter pill cover member list that why we need to add extra spacer on the top of member list */}
-      <div className="h-14" />      
+      <div className="h-2" />      
 
       {/* Results count */}
       {searchQuery && (

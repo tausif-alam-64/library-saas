@@ -5,6 +5,41 @@ import { FeeStatusBadge } from '@/components/ui/FeeStatusBadge'
 import { ROUTES } from '@/utils/constants'
 import { formatShift } from '@/utils/formatters'
 
+// Consistent color per letter — same member always gets same color
+const AVATAR_COLORS = {
+  A: 'bg-violet-100 text-violet-700',
+  B: 'bg-blue-100 text-blue-700',
+  C: 'bg-cyan-100 text-cyan-700',
+  D: 'bg-emerald-100 text-emerald-700',
+  E: 'bg-lime-100 text-lime-700',
+  F: 'bg-amber-100 text-amber-700',
+  G: 'bg-orange-100 text-orange-700',
+  H: 'bg-rose-100 text-rose-700',
+  I: 'bg-pink-100 text-pink-700',
+  J: 'bg-purple-100 text-purple-700',
+  K: 'bg-indigo-100 text-indigo-700',
+  L: 'bg-teal-100 text-teal-700',
+  M: 'bg-red-100 text-red-700',
+  N: 'bg-sky-100 text-sky-700',
+  O: 'bg-green-100 text-green-700',
+  P: 'bg-yellow-100 text-yellow-700',
+  Q: 'bg-fuchsia-100 text-fuchsia-700',
+  R: 'bg-emerald-100 text-emerald-700',
+  S: 'bg-purple-100 text-purple-700',
+  T: 'bg-teal-100 text-teal-700',
+  U: 'bg-blue-100 text-blue-700',
+  V: 'bg-violet-100 text-violet-700',
+  W: 'bg-rose-100 text-rose-700',
+  X: 'bg-orange-100 text-orange-700',
+  Y: 'bg-lime-100 text-lime-700',
+  Z: 'bg-cyan-100 text-cyan-700',
+}
+
+function getAvatarColor(name) {
+  const letter = (name || 'A').charAt(0).toUpperCase()
+  return AVATAR_COLORS[letter] || 'bg-gray-100 text-gray-700'
+}
+
 // One row in the members list
 // The entire card is a Link — tapping anywhere goes to the member profile
 // Shows: name (prominent), seat + shift (secondary), fee status badge
@@ -25,7 +60,7 @@ export function MemberCard({ member }) {
       {/* Avatar — initials circle */}
       <div className={`w-10 h-10 rounded-full flex items-center justify-center
                        text-sm font-semibold shrink-0
-                       ${isInactive ? 'bg-gray-100 text-gray-400' : 'bg-gray-900 text-white'}`}>
+                       ${isInactive ? 'bg-gray-100 text-gray-400' : getAvatarColor(name)}`}>
         {name.charAt(0).toUpperCase()}
       </div>
 

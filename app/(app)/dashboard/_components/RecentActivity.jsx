@@ -72,9 +72,9 @@ export function RecentActivity({ activities }) {
   }
 
   return (
-    <div className="mx-4">
-      <h2 className="text-xs font-semibold uppercase tracking-wider
-                     text-muted mb-2">
+    <div className="px-4">
+      <h2 className="text-base font-bold uppercase tracking-wide
+                     text-muted mb-3">
         Recent activity
       </h2>
       <div className="bg-surface rounded-2xl border border-gray-100 overflow-hidden">
@@ -84,20 +84,20 @@ export function RecentActivity({ activities }) {
           return (
             <div
               key={act.id || i}
-              className="flex items-start gap-3 px-4 py-3
+              className="flex items-start gap-3 px-4 py-3.5
                          border-b border-gray-50 last:border-b-0"
             >
               {/* Action icon */}
-              <div className={`w-8 h-8 rounded-lg ${iconData.bg} flex items-center
-                               justify-center shrink-0 mt-0.5`}>
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+              <div className={`w-10 h-10 rounded-lg ${iconData.bg} flex items-center
+                               justify-center shrink-0`}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                   {iconData.icon}
                 </svg>
               </div>
 
               {/* Description */}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-primary">
+                <p className="text-sm font-semibold text-primary">
                   {getActionDisplay(act.action)}
                 </p>
                 <p className="text-xs text-muted mt-0.5 leading-snug truncate">

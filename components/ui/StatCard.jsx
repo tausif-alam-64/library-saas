@@ -13,6 +13,7 @@ export function StatCard({ label, value, sub, accent = 'default', onClick }) {
     danger:  'text-danger',
     warning: 'text-warning',
     success: 'text-success',
+    info:    'text-info',
   }
 
   const Wrapper = onClick ? 'button' : 'div'
@@ -21,7 +22,7 @@ export function StatCard({ label, value, sub, accent = 'default', onClick }) {
     <Wrapper
       onClick={onClick}
       className={`
-        flex flex-col bg-surface rounded-2xl p-4
+        flex flex-col bg-surface rounded-2xl p-5
         border border-gray-100
         ${onClick
           ? 'active:bg-gray-50 touch-manipulation cursor-pointer text-left w-full'
@@ -29,7 +30,7 @@ export function StatCard({ label, value, sub, accent = 'default', onClick }) {
         }
       `}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-widest
+      <p className="text-xs font-medium uppercase tracking-wider
                     text-muted mb-1.5">
         {label}
       </p>

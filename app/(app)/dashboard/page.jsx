@@ -242,12 +242,12 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="pb-24 space-y-5">
-      <div className="px-4 pt-4">
-        <p className="text-xs text-muted">
+    <div className="pb-24 space-y-6">
+      <div className="px-4 pt-5">
+        <p className="text-sm text-muted font-medium">
           {dayName}
         </p>
-        <p className="text-base font-bold text-primary">
+        <p className="text-2xl font-bold text-primary mt-0.5">
           {istDay} {monthName} {istYear}
         </p>
       </div>

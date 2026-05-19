@@ -10,25 +10,29 @@ import { ROUTES } from '@/utils/constants'
 
 export function OverdueList({ members, totalCount }) {
   return (
-    <div className="mx-4">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
+    <div className="px-4">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-bold uppercase tracking-wide text-muted">
           Overdue & grace period
         </h2>
         {totalCount > members.length && (
           <Link
             href={`${ROUTES.MEMBERS}?filter=all`}   // <-  i am using all as a filter here in future i will impliment saperate filter for each valid filter
-            className="text-xs text-info touch-manipulation"
+            className="flex items-center gap-1 text-sm text-info touch-manipulation no-underline font-medium"
           >
             See all {totalCount}
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18l6-6-6-6" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round"/>
+            </svg>
           </Link>
         )}
       </div>
 
       <div className="bg-surface rounded-2xl border border-gray-100 overflow-hidden">
         {members.length === 0 ? (
-          <div className="flex items-center gap-3 px-4 py-4">
-            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center
+          <div className="flex items-center gap-3 px-4 py-5">
+            <div className="w-9 h-9 rounded-full bg-green-100 flex items-center
                             justify-center shrink-0">
               <svg className="w-4 h-4 text-success" viewBox="0 0 24 24" fill="none">
                 <path d="M20 6L9 17l-5-5" stroke="currentColor"

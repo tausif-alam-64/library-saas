@@ -10,7 +10,7 @@ export function PartnerBreakdown({ partners, total }) {
 
   return (
     <div className="px-4">
-      <h2 className="text-xs font-semibold uppercase tracking-wider
+      <h2 className="text-base font-medium 
                      text-muted mb-3">
         Collected by partner
       </h2>

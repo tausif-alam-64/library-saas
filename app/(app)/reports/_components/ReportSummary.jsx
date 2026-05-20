@@ -10,7 +10,7 @@ export function ReportSummary({ summary }) {
       {/* Collection rate — member based */}
       <div className="bg-surface rounded-2xl border border-gray-100 p-4">
         <div className="flex items-center justify-between mb-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <p className="text-sm font-medium tracking-wide text-muted">
             Collection rate
           </p>
           <p className="text-lg font-bold text-primary">{rate}%</p>

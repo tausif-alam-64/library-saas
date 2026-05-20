@@ -12,8 +12,8 @@ export function OverdueList({ members, totalCount }) {
   return (
     <div className="px-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-bold uppercase tracking-wide text-muted">
-          Overdue & grace period
+        <h2 className="text-base font-medium text-muted">
+          Overdue & Grace Period
         </h2>
         {totalCount > members.length && (
           <Link

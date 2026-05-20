@@ -73,9 +73,9 @@ export function RecentActivity({ activities }) {
 
   return (
     <div className="px-4">
-      <h2 className="text-base font-bold uppercase tracking-wide
+      <h2 className="text-base font-medium
                      text-muted mb-3">
-        Recent activity
+        Recent Activity
       </h2>
       <div className="bg-surface rounded-2xl border border-gray-100 overflow-hidden">
         {activities.map((act, i) => {
@@ -103,7 +103,7 @@ export function RecentActivity({ activities }) {
                 <p className="text-xs text-muted mt-0.5 leading-snug truncate">
                   {act.description}
                 </p>
-                <p className="text-[10px] text-muted mt-1">
+                <p className="text-[10px] text-muted mt-0.5">
                   {act.partner_name} ·{' '}
                   <RelativeDate date={act.created_at} />
                 </p>

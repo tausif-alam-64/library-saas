@@ -10,7 +10,7 @@ export function UnpaidList({ members }) {
   return (
     <div className="px-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
+        <h2 className="text-base font-medium text-muted">
           Unpaid this month
         </h2>
         {members.length > 0 && (

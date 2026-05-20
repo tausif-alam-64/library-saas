@@ -274,7 +274,7 @@ export default async function ReportsPage({ searchParams }) {
           <a
             href={ROUTES.PAYMENTS}
             className="flex items-center gap-1 h-9 px-3 rounded-xl
-                       bg-gray-100 text-gray-700 text-xs font-semibold
+                       bg-gray-100 text-gray-800 shadow-sm text-xs font-semibold
                        active:bg-gray-200 touch-manipulation no-underline shrink-0"
           >
             All payments

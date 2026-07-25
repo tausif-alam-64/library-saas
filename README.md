@@ -1224,7 +1224,6 @@ $$;
 
 **Why:** Server Components handle page data correctly and efficiently after Promise.all. Adding TanStack Query as the primary data layer would move data fetching to the client, increasing the bundle and losing the server-rendering advantage.
 
-**Exception:** TanStack Query IS used for the members list navigation cache specifically — because it was already installed (added in Phase 5) and the back-navigation pattern (`members → profile → back → profile → back`) creates real friction without it.
 
 ### Decision 3: Fee Status Never Stored
 

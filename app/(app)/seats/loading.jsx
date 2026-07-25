@@ -14,7 +14,7 @@ export default function SeatsLoading() {
       </div>
 
       {/* Grid skeleton — same 7 columns as real grid */}
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-6 gap-2.5">
         {Array.from({ length: 56 }).map((_, i) => (
           <div
             key={i}

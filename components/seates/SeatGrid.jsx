@@ -52,7 +52,7 @@ export function SeatGrid({ onSeatTap, selectedSeatId }) {
 
       {/* 7-column grid */}
       {/* gap-1.5 gives ~6px between cells — enough to distinguish without wasting space */}
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-6 gap-2.5">
         {seats.map((seat) => (
           <SeatCell
             key={seat.id}

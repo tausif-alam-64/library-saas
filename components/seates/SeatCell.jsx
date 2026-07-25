@@ -32,7 +32,7 @@ export function SeatCell({
       // touch-manipulation removes 300ms tap delay on mobile
       // select-none prevents text selection on long press
       className={`
-        relative rounded-lg overflow-hidden aspect-square w-full
+        relative rounded-lg  overflow-hidden aspect-square w-full
         select-none touch-manipulation cursor-pointer
         border transition-all active:scale-95
         ${isSelected

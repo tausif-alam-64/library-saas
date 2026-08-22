@@ -1,6 +1,6 @@
 # Library SaaS — Complete Technical Documentation
 
-> **Status:** Phase 12 (Data Migration) — Production ready for first real library client  
+> **Status:** Production — actively used by Gyaan Study Library, Kushinagar for 6+ months 
 > **Last updated:** April 2026  
 > **Stack:** Next.js 16 App Router · Supabase (Mumbai ap-south-1) · Tailwind CSS v4 · Zustand · Vercel  
 > **Language:** JavaScript (no TypeScript)  

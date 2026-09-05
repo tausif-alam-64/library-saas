@@ -29,12 +29,12 @@ This logs you into a **demo tenant** — isolated from production data by Postgr
 |                       |                                                                       |
 | --------------------- | --------------------------------------------------------------------- |
 | **Client**            | Gyaan Study Library, Kushinagar (UP)                                  |
-| **Live since**        | [MONTH] — 6+ months in daily use                                      |
+| **Live since**        | April 2026 — 6+ months in daily use                                      |
 | **Payments recorded** | 161                                                                   |
 | **Members managed**   | 100+                                                                  |
 | **Seats**             | 56 at launch → **108 after expansion**                                |
 | **Partners**          | 3 co-owners with role-based permissions                               |
-| **Compensation**      | Lifetime library membership (in-kind, ₹7k+ value) — my first customer |
+| **Compensation**      | Lifetime library membership — my first customer |
 
 The library **doubled in size while running on this system** — no migration, no downtime, no code rewrite.
 

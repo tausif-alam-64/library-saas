@@ -1,12 +1,78 @@
-# Library SaaS — Complete Technical Documentation
+#  Library SaaS
 
-> **Status:** Production — actively used by Gyaan Study Library, Kushinagar for 6+ months 
-> **Last updated:** April 2026  
-> **Stack:** Next.js 16 App Router · Supabase (Mumbai ap-south-1) · Tailwind CSS v4 · Zustand · Vercel  
-> **Language:** JavaScript (no TypeScript)  
-> **Repo:** GitHub private → Vercel auto-deploys `main` branch
+**A multi-tenant operating system for private study libraries — live in production for 6+ months**
+
+161 payments recorded · 100+ members · 56 → 108 seats · 1 developer
 
 ---
+
+##  Try the live demo
+
+|              |                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------- |
+| **URL**      | [**https://library-saas-gamma.vercel.app**](https://library-saas-gamma.vercel.app) |
+| **Email**    | `nextinbytausif@gmail.com`                                                         |
+| **Password** | `12345678`                                                                         |
+
+This logs you into a **demo tenant** — isolated from production data by PostgreSQL Row-Level Security. You have full write access: assign a seat, record a payment, add a member. Break things — that's what it's for.
+
+**60-second tour:**
+
+1. **Seat map** → tap any green seat → **Assign** → pick a shift — the grid updates live
+2. **Members** → open any member → full payment history, fee status, allocation history
+3. **Dashboard** → today's collections, overdue members, recent activity
+
+---
+
+##  Production case study
+
+|                       |                                                                       |
+| --------------------- | --------------------------------------------------------------------- |
+| **Client**            | Gyaan Study Library, Kushinagar (UP)                                  |
+| **Live since**        | [MONTH] — 6+ months in daily use                                      |
+| **Payments recorded** | 161                                                                   |
+| **Members managed**   | 100+                                                                  |
+| **Seats**             | 56 at launch → **108 after expansion**                                |
+| **Partners**          | 3 co-owners with role-based permissions                               |
+| **Compensation**      | Lifetime library membership (in-kind, ₹7k+ value) — my first customer |
+
+The library **doubled in size while running on this system** — no migration, no downtime, no code rewrite.
+
+---
+
+## The story
+
+Two years ago, I was a student paying for a seat in this library — watching the owner manage 56 seats, three shifts, three co-owners, and every fee collection in paper registers. Double-booked seats. Payment disputes. Hours of reconciliation every month.
+
+I told him I could build something better. Today, it runs his entire operation.
+
+Demo projects taught me to code. **Production taught me to engineer** — atomic transactions, tenant isolation, timezone correctness, audit trails, and the discipline of maintaining software a real business depends on.
+
+---
+
+## Why this isn't a tutorial project
+
+- **True multi-tenancy** — every table keyed by `library_id`, every query double-scoped (application filter **+** RLS policy), tenant ID embedded in the JWT via a Supabase custom access token hook → §6, §19
+- **Double-booking made impossible at the database level** — partial unique indexes + atomic `create_member_with_allocation()` RPC → §4
+- **Fee status is never stored — always computed** from payment records, so it can never go stale → §10
+- **Audit trail on every write** — who, what, when, before/after state → §4
+- **Realtime seat map** — the grid updates the moment any partner assigns or frees a seat → §17
+- **A real IST timezone bug, hunted and fixed** — why you never parse date strings as UTC in India → §11
+- **TTFB: 2.04s → 0.34s (−83%)** — query parallelization, React `cache()`, killing a redundant DB round-trip → §18
+
+---
+
+## Stack
+
+Next.js 16 (App Router) · Supabase (PostgreSQL, Auth, RLS, Realtime — Mumbai ap-south-1) · Tailwind CSS v4 · Zustand · TanStack Query · Vercel · JavaScript (no TypeScript)
+
+---
+
+# Complete Technical Documentation
+
+> **Last updated:** [MONTH YEAR]
+
+Everything below is the full engineering documentation: database schema, RLS policies, multi-tenant design, data flow, core business logic, API design, performance work, and every architectural decision with its reasoning.
 
 ## Table of Contents
 
